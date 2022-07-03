@@ -1,0 +1,8 @@
+.post.yml
+.prepare.yml
+.deploy.yml
+.setup.yml
+ansible/*
+docker*
+Dockerfile.*
+Jenkinsfile
