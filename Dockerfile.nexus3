@@ -1,3 +1,3 @@
-ARG TAG_VERSON
-FROM docker.io/sonatype/nexus3:${TAG_VERSON}
+ARG TAG_VERSION
+FROM docker.io/sonatype/nexus3:${TAG_VERSION}
 

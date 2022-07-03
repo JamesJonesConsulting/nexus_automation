@@ -5,8 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.nexus3
-      # args:
-      #   PHP_VERSION: ${VERSION-7.3}...
+      args:
+        TAG_VERSION: ${TAG_VERSION}
     cap_add:
       - ALL
     stop_grace_period: 3600s
