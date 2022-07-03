@@ -30,3 +30,7 @@
 #   template:
 #     src: "{{ playbook_dir }}/templates/nexus.vmoptions.j2"
 #     dest: /opt/nexus/nexus.vmoptions
+- name: Install certbot
+  yum:
+    name: certbot
+    state: latest
