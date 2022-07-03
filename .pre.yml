@@ -73,3 +73,13 @@ jobs:
                 dockerComposeCommand: stop
                 dockerComposeFileArgs: |
                   TAG_VERSION=${{ parameters.version }}
+            - task: DockerCompose@0
+              displayName: Build services in docker-compose.yml
+              inputs:
+                action: Build services
+                containerregistrytype: 'Container Registry'
+                dockerRegistryEndpoint: ${{ parameters.networks[parameters.network]['registry'] }}
+                dockerComposeFile: './docker-compose.yml' 
+                projectName: $(Build.Repository.Name)
+                dockerComposeFileArgs: |
+                  TAG_VERSION=${{ parameters.version }}
