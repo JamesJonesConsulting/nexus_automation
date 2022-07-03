@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>Docker SSL Repository Service Ports</short>
+  <description>Docker SSL Repository service firewalld port exceptions</description>
+  <port protocol="tcp" port="5443"/>
+  <port protocol="tcp" port="5444"/>
+  <port protocol="tcp" port="5445"/>
+  <port protocol="tcp" port="5446"/>
+  <port protocol="tcp" port="5447"/>
+</service>
