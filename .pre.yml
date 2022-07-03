@@ -83,3 +83,26 @@ jobs:
                 projectName: $(Build.Repository.Name)
                 dockerComposeFileArgs: |
                   TAG_VERSION=${{ parameters.version }}
+            - task: DockerCompose@0
+              displayName: Remove with force any existing service containers
+              inputs:
+                action: Run a Docker Compose command
+                containerregistrytype: 'Container Registry'
+                dockerRegistryEndpoint: ${{ parameters.networks[parameters.network]['registry'] }}
+                dockerComposeFile: './docker-compose.yml' 
+                projectName: $(Build.Repository.Name)
+                # qualifyImageNames: true
+                dockerComposeCommand: rm -f
+                dockerComposeFileArgs: |
+                  TAG_VERSION=${{ parameters.version }}
+            - task: DockerCompose@0
+              displayName: Bring up the services
+              inputs:
+                containerregistrytype: 'Container Registry'
+                dockerRegistryEndpoint: ${{ parameters.networks[parameters.network]['registry'] }}
+                dockerComposeFile: './docker-compose.yml' 
+                projectName: $(Build.Repository.Name)
+                action: 'Run services'
+                buildImages: false
+                dockerComposeFileArgs: |
+                  TAG_VERSION=${{ parameters.version }}
