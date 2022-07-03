@@ -106,3 +106,12 @@ jobs:
                 buildImages: false
                 dockerComposeFileArgs: |
                   TAG_VERSION=${{ parameters.version }}
+            - bash: |
+                eval $(ssh-agent -s); cat $(agentKey.secureFilePath) | ssh-add -; echo "${{ parameters.vault }}" > $(Agent.TempDirectory)/.keyvault
+                ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
+                ansible-galaxy collection install -r ansible/requirements.yml
+                ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault --key-file=$(hostKey.secureFilePath) -i ansible/roles/inventory/${{ parameters.network }} -u ${{ parameters.networks[parameters.network].host_user }} ansible/playbook-post.yml -e 'inventory_group_name=${{ parameters.networks[parameters.network].group }}' -vvv
+              # workingDirectory: $(Build.Repository.Name)
+              displayName: Connect to Nexus hosts and setup post-requirements
+              env:
+                ANSIBLE_HOST_KEY_CHECKING: False
