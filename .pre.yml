@@ -59,3 +59,15 @@ jobs:
               inputs:
                 command: login
                 containerRegistry: ${{ parameters.networks[parameters.network]['registry'] }}
+            - task: DockerCompose@0
+              displayName: Stop any running service containers with docker-compose
+              inputs:
+                action: Run a Docker Compose command
+                containerregistrytype: 'Container Registry'
+                dockerRegistryEndpoint: ${{ parameters.networks[parameters.network]['registry'] }}
+                dockerComposeFile: './docker-compose.yml'
+                projectName: $(Build.Repository.Name)
+                # qualifyImageNames: true
+                dockerComposeCommand: stop
+                dockerComposeFileArgs: |
+                  TAGVALUE=3.37.3-ubi-1
