@@ -28,6 +28,8 @@ jobs:
       name: ${{ parameters.networks[parameters.network]['environment'] }}
       resourceType: VirtualMachine
     pool: ${{ parameters.networks[parameters.network]['pool'] }}
+    variables:
+      AZP_AGENT_USE_LEGACY_HTTP: true
     strategy:
       runOnce:
         deploy:  
