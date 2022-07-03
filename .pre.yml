@@ -19,11 +19,11 @@ steps:
   - task: DownloadSecureFile@1
     name: agentKey # The name with which to reference the secure file's path on the agent, like $(mySecureFile.secureFilePath)
     inputs:
-      secureFile: ${{ parameters.networks[parameter.network]['agent_key'] }}
+      secureFile: ${{ parameters.networks[parameters.network]['agent_key'] }}
   - bash: |
       eval $(ssh-agent -s); cat $(agentKey.secureFilePath) | ssh-add -; echo "${{ parameters.vault }}" > $(Agent.TempDirectory)/.keyvault
       ansible-galaxy install -r ansible/requirements.yml -p ansible/roles
-      # ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault -i ansible/roles/inventory/${{ parameters.network }} ansible/playbook.yml -e 'inventory_group_name=${{ parameters.networks[parameter.network].group }}' -vvv
+      # ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault -i ansible/roles/inventory/${{ parameters.network }} ansible/playbook.yml -e 'inventory_group_name=${{ parameters.networks[parameters.network].group }}' -vvv
     workingDirectory: $(Build.Repository.Name)
     displayName: Connect to Nexus hosts and setup pre-requirements
     env:
