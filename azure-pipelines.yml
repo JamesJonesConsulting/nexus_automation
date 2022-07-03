@@ -16,7 +16,7 @@ variables:
   - group: ansible
 stages:
   - stage: PrePrepNexus
-    displayName: Setup Nexus Pre-Prep Nexus
+    displayName: Setup Nexus Pre-Prep Host Requirements
     jobs:
       - template: .pre.yml
         parameters:
