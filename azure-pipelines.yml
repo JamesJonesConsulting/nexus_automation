@@ -18,20 +18,13 @@ stages:
   - stage: PrePrepNexus
     displayName: Setup Nexus Pre-Prep Nexus
     jobs:
-      - deployment: NexusPrePrep
-        displayName: Preparing Nexus Host
-        environment: nexus
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - template: .pre.yml
-                  parameters:
-                    network: ${{ parameters.network }}
-                    ${{ if in(parameters.network,'sgan')}}:
-                      vault: $(YMD_ANSIBLE_VAULT_KEY)
-                    ${{ if in(parameters.network,'ymd')}}:
-                      vault: $(YMD_ANSIBLE_VAULT_KEY)
+      - template: .pre.yml
+        parameters:
+          network: ${{ parameters.network }}
+          ${{ if in(parameters.network,'sgan')}}:
+            vault: $(YMD_ANSIBLE_VAULT_KEY)
+          ${{ if in(parameters.network,'ymd')}}:
+            vault: $(YMD_ANSIBLE_VAULT_KEY)
       # - template: .deploy.yml
       #   parameters:
       #     version: ${{ parameters.nexus_ver }}
