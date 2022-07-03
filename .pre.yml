@@ -11,14 +11,16 @@ parameters:
         group: nexus
         agent_key: ymd_agent_key
         pool: YMDAgents
+        environment: ymdregistry
       sgan:
         group: nexus
         agent_key: sgan_agent_key
         pool: PodmanAgents
+        environment: nexus
 jobs:
   - deployment: NexusPrePrep
     displayName: Preparing Nexus Host
-    environment: nexus
+    environment: ${{ parameters.networks[parameters.network]['environment'] }}
     pool: ${{ parameters.networks[parameters.network]['pool'] }}
     strategy:
       runOnce:
