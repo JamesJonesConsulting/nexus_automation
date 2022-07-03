@@ -9,12 +9,16 @@ parameters:
     default:
       ymd:
         group: nexus
-        agent_key: ymd_agent_key
+        agent_key: sgan_agent_key
+        host_key: ymd_agent_key
+        host_user: jamjon3
         pool: YMDAgents
         environment: ymdregistry
       sgan:
         group: nexus
         agent_key: sgan_agent_key
+        host_key: ymd_agent_key
+        host_user: jam
         pool: PodmanAgents
         environment: nexus
 jobs:
@@ -31,11 +35,15 @@ jobs:
               name: agentKey # The name with which to reference the secure file's path on the agent, like $(mySecureFile.secureFilePath)
               inputs:
                 secureFile: ${{ parameters.networks[parameters.network]['agent_key'] }}
+            - task: DownloadSecureFile@1
+              name: hostKey # The name with which to reference the secure file's path on the agent, like $(mySecureFile.secureFilePath)
+              inputs:
+                secureFile: ${{ parameters.networks[parameters.network]['host_key'] }}
             - bash: |
                 eval $(ssh-agent -s); cat $(agentKey.secureFilePath) | ssh-add -; echo "${{ parameters.vault }}" > $(Agent.TempDirectory)/.keyvault
                 ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
                 ansible-galaxy collection install -r ansible/requirements.yml
-                # ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault -i ansible/roles/inventory/${{ parameters.network }} ansible/playbook.yml -e 'inventory_group_name=${{ parameters.networks[parameters.network].group }}' -vvv
+                # ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault --key-file=$(hostKey.secureFilePath) -i ansible/roles/inventory/${{ parameters.network }} -u ${{ parameters.networks[parameters.network].host_user }} ansible/playbook.yml -e 'inventory_group_name=${{ parameters.networks[parameters.network].group }}' -vvv
               # workingDirectory: $(Build.Repository.Name)
               displayName: Connect to Nexus hosts and setup pre-requirements
               env:
