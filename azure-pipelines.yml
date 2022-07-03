@@ -30,7 +30,7 @@ stages:
                     network: ${{ parameters.network }}
                     ${{ if in(parameters.network,'sgan')}}:
                       vault: $(YMD_ANSIBLE_VAULT_KEY)
-                    ${{ if in(parameters.network,'sgan')}}:
+                    ${{ if in(parameters.network,'ymd')}}:
                       vault: $(YMD_ANSIBLE_VAULT_KEY)
       # - template: .deploy.yml
       #   parameters:
