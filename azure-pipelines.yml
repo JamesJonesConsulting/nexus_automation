@@ -21,6 +21,7 @@ stages:
       - template: .pre.yml
         parameters:
           network: ${{ parameters.network }}
+          version: ${{ parameters.nexus_ver }}
           ${{ if in(parameters.network,'sgan')}}:
             vault: $(YMD_ANSIBLE_VAULT_KEY)
           ${{ if in(parameters.network,'ymd')}}:

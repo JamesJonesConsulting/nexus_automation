@@ -2,6 +2,8 @@ parameters:
   - name: network
     type: string
     default: sgan
+  - name: version
+    type: string
   - name: vault
     type: string
   - name: networks
@@ -70,4 +72,4 @@ jobs:
                 # qualifyImageNames: true
                 dockerComposeCommand: stop
                 dockerComposeFileArgs: |
-                  TAGVALUE=3.37.3-ubi-1
+                  TAG_VERSION=${{ parameters.version }}
