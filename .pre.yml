@@ -24,7 +24,7 @@ steps:
       eval $(ssh-agent -s); cat $(agentKey.secureFilePath) | ssh-add -; echo "${{ parameters.vault }}" > $(Agent.TempDirectory)/.keyvault
       ansible-galaxy install -r ansible/requirements.yml -p ansible/roles
       # ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault -i ansible/roles/inventory/${{ parameters.network }} ansible/playbook.yml -e 'inventory_group_name=${{ parameters.networks[parameters.network].group }}' -vvv
-    workingDirectory: $(Build.Repository.Name)
+    # workingDirectory: $(Build.Repository.Name)
     displayName: Connect to Nexus hosts and setup pre-requirements
     env:
       ANSIBLE_HOST_KEY_CHECKING: False
