@@ -17,7 +17,7 @@ parameters:
       sgan:
         group: nexus
         agent_key: sgan_agent_key
-        host_key: ymd_agent_key
+        host_key: sgan_agent_key
         host_user: jam
         pool: PodmanAgents
         environment: nexus
