@@ -6,3 +6,5 @@
   tasks:
     - name: Setup firewall
       include_tasks: firewall.yml
+    - name: Setup Nexus config
+      include_tasks: nexus-config.yml
