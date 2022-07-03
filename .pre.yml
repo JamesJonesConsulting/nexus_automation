@@ -1,0 +1,31 @@
+steps:
+  - checkout: self
+  - checkout: certs
+  - task: CopyFiles@2
+    displayName: Copy certificates into repo
+    inputs:
+      sourceFolder: $(Build.SourcesDirectory)/devops_certs
+      contents: '**'
+      targetFolder: $(Build.Repository.Name)/ansible/certs
+      cleanTargetFolder: true
+      overWrite: true
+  - bash: |
+      eval $(ssh-agent); ssh-add <(echo "${PRIVATE_KEY}" | base64 -d | gunzip); echo "${VAULT_KEY}" > $(Agent.TempDirectory)/.vault; rm -Rf ansible/roles;
+      rm -Rf ansible/roles
+      DEPLOY_ENV_INV=$(echo $DEPLOY_ENV | tr '[:upper:]' '[:lower:]')
+      echo "${DEPLOY_ENV_INV}"
+      ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles/ -f
+      ansible-galaxy collection install -r ansible/requirements.yml
+      # ansible-playbook -i ansible/roles/inventory/inventory3.py --vault-password-file=$(Agent.TempDirectory)/.vault --user=DevOps1 ansible/playbook.yml --extra-vars 'target_hosts=$(DEPLOY_GROUP) deploy_env=$(DEPLOY_ENV) nexus_ver=$(NEXUS_VER)' -b -vvvv
+      ansible-playbook -i ansible/roles/inventory/${DEPLOY_ENV_INV}/hosts --vault-password-file=$(Agent.TempDirectory)/.vault --user=DevOps1 ansible/playbook.yml --extra-vars 'target_hosts=$(DEPLOY_GROUP) deploy_env=$(DEPLOY_ENV) nexus_ver=$(NEXUS_VER)' -b -vvvv
+    workingDirectory: $(Build.Repository.Name)
+    displayName: Connect to Nexus hosts and setup service
+    env:
+      DEPLOY_ENV: $(DEPLOY_ENV)
+      DEPLOY_WINPASS: $(DEPLOY_WINPASS)
+      DEPLOY_USER: $(DEPLOY_USER)
+      DEPLOY_WINUSER: $(DEPLOY_WINUSER)
+      ANSIBLE_HOST_KEY_CHECKING: False
+      PRIVATE_KEY: $(ansiblePrivateKey)
+      VAULT_KEY: $(ansibleVaultKey)
+      CI_SECRET_KEY: $(Agent.TempDirectory)/.vault
