@@ -11,7 +11,7 @@ services:
       - ALL
     stop_grace_period: 3600s
     container_name: nexus
-    hostname: nexus01.pd.pods.com
+    hostname: ${HOST_NAME}
     ports:
       - "443:8443"
       - "5443:5443"

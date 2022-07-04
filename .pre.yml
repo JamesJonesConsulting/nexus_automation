@@ -14,6 +14,8 @@ parameters:
         agent_key: sgan_agent_key
         host_key: ymd_agent_key
         host_user: jamjon3
+        hostname: regisry.jamjon3.sites.net
+        certpath: /live/jamjon3.sytes.net
         pool: YMDAgents
         environment: ymdregistry
         registry: dh_registry
@@ -22,6 +24,8 @@ parameters:
         agent_key: sgan_agent_key
         host_key: sgan_agent_key
         host_user: jam
+        hostname: regisry.jamjon3.sites.net
+        certpath: /live/jamjon3.sytes.net
         pool: PodmanAgents
         environment: nexus
         registry: dh_registry
@@ -73,6 +77,7 @@ jobs:
                 dockerComposeCommand: stop
                 dockerComposeFileArgs: |
                   TAG_VERSION=${{ parameters.version }}
+                  HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
             - task: DockerCompose@0
               displayName: Build services in docker-compose.yml
               inputs:
@@ -83,6 +88,7 @@ jobs:
                 projectName: $(Build.Repository.Name)
                 dockerComposeFileArgs: |
                   TAG_VERSION=${{ parameters.version }}
+                  HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
             - task: DockerCompose@0
               displayName: Remove with force any existing service containers
               inputs:
@@ -95,6 +101,7 @@ jobs:
                 dockerComposeCommand: rm -f
                 dockerComposeFileArgs: |
                   TAG_VERSION=${{ parameters.version }}
+                  HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
             - task: DockerCompose@0
               displayName: Bring up the services
               inputs:
@@ -106,6 +113,7 @@ jobs:
                 buildImages: false
                 dockerComposeFileArgs: |
                   TAG_VERSION=${{ parameters.version }}
+                  HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
             - bash: |
                 eval $(ssh-agent -s); cat $(agentKey.secureFilePath) | ssh-add -; echo "${{ parameters.vault }}" > $(Agent.TempDirectory)/.keyvault
                 ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
