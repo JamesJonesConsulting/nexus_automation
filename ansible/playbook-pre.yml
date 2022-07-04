@@ -8,3 +8,8 @@
       include_tasks: firewall.yml
     - name: Setup Nexus config
       include_tasks: nexus-config.yml
+    - name: Enable systemd service
+      systemd:
+        name: container-nexus
+        state: stopped
+      ignore_errors: yes
