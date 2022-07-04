@@ -43,7 +43,7 @@
     path: "/opt/nexus/etc/ssl/keystore.pkcs12"
     passphrase: password
     friendly_name: nexus
-    privatekey_path: "/etc/letsencrypt/live/{{ certbot[inventory].path }}/privkey.key"
+    privatekey_path: "/etc/letsencrypt/live/{{ certbot[inventory].path }}/privkey.pem"
     certificate_path: "/etc/letsencrypt/live/{{ certbot[inventory].path }}/fullchain.pem"
     # other_certificates_parse_all: yes
     # other_certificates: "/opt/nexus/etc/ssl/ca.txt"
