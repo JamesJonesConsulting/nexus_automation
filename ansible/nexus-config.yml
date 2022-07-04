@@ -24,8 +24,8 @@
       value: "${karaf.data}/etc/ssl"
   loop_control:
     loop_var: ssl_setting
-- name: Build Nexus keystore
-  include_tasks: keystore.yml
+# - name: Build Nexus keystore
+#   include_tasks: keystore.yml
 - name: Setup the VM options
   template:
     src: "{{ playbook_dir }}/templates/nexus.vmoptions.j2"
