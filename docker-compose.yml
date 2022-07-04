@@ -31,7 +31,7 @@ services:
         aliases:
           - nxs
     environment:
-      INSTALL4J_ADD_VM_PARAMS: "-Xms4096m -Xmx4096m -XX:MaxDirectMemorySize=4096m -Djava.util.prefs.userRoot=/nexus-data/javaprefs -Djavax.net.ssl.keyStore=/nexus-data/etc/ssl/keystore.jks -Djavax.net.ssl.keyStorePassword=password"
+      INSTALL4J_ADD_VM_PARAMS: "-Xms4096m -Xmx4096m -XX:MaxDirectMemorySize=4096m -Djava.util.prefs.userRoot=/nexus-data/javaprefs -Djavax.net.ssl.keyStore=/nexus-data/etc/ssl/keystore.pkcs12 -Djavax.net.ssl.keyStorePassword=password"
     volumes:
       - /opt/nexus:/nexus-data:Z
       - /etc/letsencrypt:/etc/letsencrypt:Z
