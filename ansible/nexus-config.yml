@@ -34,3 +34,26 @@
   yum:
     name: certbot
     state: latest
+- name: Setup/Renew certificate
+  command: "certbot certonly --manual --preferred-challenges dns -d {{ certbot_domain }}"
+- name: Generate PKCS#12 file
+  community.crypto.openssl_pkcs12:
+    action: export
+    path: "/opt/nexus/etc/ssl/keystore.pkcs12"
+    passphrase: password
+    friendly_name: nexus
+    privatekey_path: "/etc/letsencrypt/{{ certpath }}/privkey.key"
+    certificate_path: "/etc/letsencrypt/{{ certpath }}/fullchain.pem"
+    # other_certificates_parse_all: yes
+    # other_certificates: "/opt/nexus/etc/ssl/ca.txt"
+    state: present
+- name: Import a pkcs12 keystore and create a JKS keystore
+  java_cert:
+    pkcs12_path: "/opt/nexus/etc/ssl/keystore.pkcs12"
+    pkcs12_password: password
+    pkcs12_alias: nexus
+    cert_alias: nexus
+    keystore_path: "/opt/nexus/etc/ssl/keystore.jks"
+    keystore_pass: password
+    keystore_create: yes
+    state: present

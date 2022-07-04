@@ -16,6 +16,7 @@ parameters:
         host_user: jamjon3
         hostname: regisry.jamjon3.sites.net
         certpath: /live/jamjon3.sytes.net
+        certbot_domain: '*.jamjon3.sytes.net'
         pool: YMDAgents
         environment: ymdregistry
         registry: dh_registry
@@ -26,6 +27,7 @@ parameters:
         host_user: jam
         hostname: regisry.jamjon3.sites.net
         certpath: /live/jamjon3.sytes.net
+        certbot_domain: '*.jamjon3.sytes.net'
         pool: PodmanAgents
         environment: nexus
         registry: dh_registry
@@ -55,8 +57,9 @@ jobs:
                 eval $(ssh-agent -s); cat $(agentKey.secureFilePath) | ssh-add -; echo "${{ parameters.vault }}" > $(Agent.TempDirectory)/.keyvault
                 ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
                 ansible-galaxy collection install -r ansible/requirements.yml
-                ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault --key-file=$(hostKey.secureFilePath) -i ansible/roles/inventory/${{ parameters.network }} -u ${{ parameters.networks[parameters.network].host_user }} ansible/playbook-pre.yml -e 'inventory_group_name=${{ parameters.networks[parameters.network].group }}' -vvv
-              # workingDirectory: $(Build.Repository.Name)
+                ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault --key-file=$(hostKey.secureFilePath) -i ansible/roles/inventory/${{ parameters.network }} -u ${{ parameters.networks[parameters.network].host_user }} ansible/playbook-pre.yml -e 'inventory_group_name=${{ parameters.networks[parameters.network].group }} certpath=${{ parameters.networks[parameters.network].certpath }} certbot_domain=certpath=${{ parameters.networks[parameters.network].certbot_domain }}' -vvv
+              # workingDirectory: $(Build.Repository.Name)         certbot_domain: '*.jamjon3.sytes.net'
+
               displayName: Connect to Nexus hosts and setup pre-requirements
               env:
                 ANSIBLE_HOST_KEY_CHECKING: False
