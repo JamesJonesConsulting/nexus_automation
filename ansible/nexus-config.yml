@@ -41,24 +41,29 @@
   yum:
     name: openssl
     state: latest
-- name: Generate PKCS#12 file
-  community.crypto.openssl_pkcs12:
-    action: export
-    path: "/opt/nexus/etc/ssl/keystore.pkcs12"
-    passphrase: password
-    friendly_name: nexus
-    privatekey_path: "/etc/letsencrypt/live/{{ certbot[inventory].path }}/privkey.pem"
-    certificate_path: "/etc/letsencrypt/live/{{ certbot[inventory].path }}/fullchain.pem"
-    # other_certificates_parse_all: yes
-    # other_certificates: "/opt/nexus/etc/ssl/ca.txt"
-    state: present
-- name: Import a pkcs12 keystore and create a JKS keystore
-  java_cert:
-    pkcs12_path: "/opt/nexus/etc/ssl/keystore.pkcs12"
-    pkcs12_password: password
-    pkcs12_alias: nexus
-    cert_alias: nexus
-    keystore_path: "/opt/nexus/etc/ssl/keystore.jks"
-    keystore_pass: password
-    keystore_create: yes
-    state: present
+- name: Gather the LetEncrypt certs into a single file  
+  shell: |
+    cat /etc/letsencrypt/live/{{ certbot[inventory].path }}/*.pem > /opt/nexus/etc/ssl/keystore.pem
+    openssl pkcs12 -export -out /opt/nexus/etc/ssl/keystore.pkcs12 -in /opt/nexus/etc/ssl/keystore.pem -passout pass:password -name nexus
+    rm -f /opt/nexus/etc/ssl/keystore.pem
+# - name: Generate PKCS#12 file
+#   community.crypto.openssl_pkcs12:
+#     action: export
+#     path: "/opt/nexus/etc/ssl/keystore.pkcs12"
+#     passphrase: password
+#     friendly_name: nexus
+#     privatekey_path: "/etc/letsencrypt/live/{{ certbot[inventory].path }}/privkey.pem"
+#     certificate_path: "/etc/letsencrypt/live/{{ certbot[inventory].path }}/fullchain.pem"
+#     # other_certificates_parse_all: yes
+#     # other_certificates: "/opt/nexus/etc/ssl/ca.txt"
+#     state: present
+# - name: Import a pkcs12 keystore and create a JKS keystore
+#   java_cert:
+#     pkcs12_path: "/opt/nexus/etc/ssl/keystore.pkcs12"
+#     pkcs12_password: password
+#     pkcs12_alias: nexus
+#     cert_alias: nexus
+#     keystore_path: "/opt/nexus/etc/ssl/keystore.jks"
+#     keystore_pass: password
+#     keystore_create: yes
+#     state: present
