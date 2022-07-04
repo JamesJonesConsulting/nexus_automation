@@ -37,6 +37,10 @@
 - name: Setup/Renew certificate
   command: "certbot certonly --manual --preferred-challenges dns -d {{ certbot[inventory].domain }}"
   ignore_errors: yes
+- name: Install openssl
+  yum:
+    name: openssl
+    state: latest
 - name: Generate PKCS#12 file
   community.crypto.openssl_pkcs12:
     action: export
