@@ -4,7 +4,9 @@ certbot:
     domain: '*.jamjon3.sytes.net'
     path: 'jamjon3.sytes.net'
     host: 'registry.jamjon3.sites.net'
+    email: 'jamjon3@gmail.com'
   sgan:
     domain: '*.jamjon3.sytes.net'
     path: 'jamjon3.sytes.net'
     host: 'nexus.jamjon3.sites.net'
+    email: 'jamjon3@gmail.com'
