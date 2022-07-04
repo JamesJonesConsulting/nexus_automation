@@ -43,10 +43,13 @@
     state: latest
 - name: Gather the LetEncrypt certs into a single file  
   shell: |
-    cat /etc/letsencrypt/live/{{ certbot[inventory].path }}/*.pem > /opt/nexus/etc/ssl/keystore.pem
-    openssl pkcs12 -export -out /opt/nexus/etc/ssl/keystore.pkcs12 -in /opt/nexus/etc/ssl/keystore.pem -passout pass:password -name nexus
-    rm -f /opt/nexus/etc/ssl/keystore.pem
-    rm -f /opt/nexus/etc/ssl/keystore.jks
+    cat /etc/letsencrypt/live/{{ certbot[inventory].path }}/*.pem > ./keystore.pem
+    openssl pkcs12 -export -out /./keystore.pkcs12 -in ./keystore.pem -passout pass:password -name nexus
+    rm -f ./keystore.jks
+    keytool -v -importkeystore -srckeystore keystore.pkcs12 -destkeystore keystore.jks -deststoretype JKS -deststorepass password -srcstorepass password
+    rm -f ./keystore.pkcs12; rm -f ./keystore.pem
+  args:
+    chdir: /opt/nexus/etc/ssl/
 # - name: Generate PKCS#12 file
 #   community.crypto.openssl_pkcs12:
 #     action: export
@@ -58,13 +61,13 @@
 #     # other_certificates_parse_all: yes
 #     # other_certificates: "/opt/nexus/etc/ssl/ca.txt"
 #     state: present
-- name: Import a pkcs12 keystore and create a JKS keystore
-  java_cert:
-    pkcs12_path: "/opt/nexus/etc/ssl/keystore.pkcs12"
-    pkcs12_password: password
-    pkcs12_alias: nexus
-    cert_alias: nexus
-    keystore_path: "/opt/nexus/etc/ssl/keystore.jks"
-    keystore_pass: password
-    keystore_create: yes
-    state: present
+# - name: Import a pkcs12 keystore and create a JKS keystore
+#   java_cert:
+#     pkcs12_path: "/opt/nexus/etc/ssl/keystore.pkcs12"
+#     pkcs12_password: password
+#     pkcs12_alias: nexus
+#     cert_alias: nexus
+#     keystore_path: "/opt/nexus/etc/ssl/keystore.jks"
+#     keystore_pass: password
+#     keystore_create: yes
+#     state: present
