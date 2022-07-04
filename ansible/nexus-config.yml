@@ -46,6 +46,7 @@
     cat /etc/letsencrypt/live/{{ certbot[inventory].path }}/*.pem > /opt/nexus/etc/ssl/keystore.pem
     openssl pkcs12 -export -out /opt/nexus/etc/ssl/keystore.pkcs12 -in /opt/nexus/etc/ssl/keystore.pem -passout pass:password -name nexus
     rm -f /opt/nexus/etc/ssl/keystore.pem
+    rm -f /opt/nexus/etc/ssl/keystore.jks
 # - name: Generate PKCS#12 file
 #   community.crypto.openssl_pkcs12:
 #     action: export
