@@ -33,7 +33,7 @@ jobs:
       resourceType: VirtualMachine
     pool: ${{ parameters.networks[parameters.network]['pool'] }}
     variables:
-      AZP_AGENT_USE_LEGACY_HTTP: true
+      DOCKER_BUILDKIT: 0
     strategy:
       runOnce:
         deploy:  
