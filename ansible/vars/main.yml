@@ -1,1 +1,6 @@
 ---
+certbot:
+  ymd:
+    domain: *.jamjon3.sytes.net
+  sgan:
+    domain: *.jamjon3.sytes.net
