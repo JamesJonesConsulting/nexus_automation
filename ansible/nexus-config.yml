@@ -35,7 +35,7 @@
     name: certbot
     state: latest
 - name: Setup/Renew certificate
-  command: "certbot certonly --manual --email {{ certbot[inventory].email }} --preferred-challenges dns --agree-tos -d {{ certbot[inventory].domain }}"
+  command: "certbot certonly --manual --email {{ certbot[inventory].email }} --preferred-challenges dns --agree-tos --non-interactive -d {{ certbot[inventory].domain }}"
   ignore_errors: yes
 - name: Install openssl
   yum:
