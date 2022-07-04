@@ -57,13 +57,13 @@
 #     # other_certificates_parse_all: yes
 #     # other_certificates: "/opt/nexus/etc/ssl/ca.txt"
 #     state: present
-# - name: Import a pkcs12 keystore and create a JKS keystore
-#   java_cert:
-#     pkcs12_path: "/opt/nexus/etc/ssl/keystore.pkcs12"
-#     pkcs12_password: password
-#     pkcs12_alias: nexus
-#     cert_alias: nexus
-#     keystore_path: "/opt/nexus/etc/ssl/keystore.jks"
-#     keystore_pass: password
-#     keystore_create: yes
-#     state: present
+- name: Import a pkcs12 keystore and create a JKS keystore
+  java_cert:
+    pkcs12_path: "/opt/nexus/etc/ssl/keystore.pkcs12"
+    pkcs12_password: password
+    pkcs12_alias: nexus
+    cert_alias: nexus
+    keystore_path: "/opt/nexus/etc/ssl/keystore.jks"
+    keystore_pass: password
+    keystore_create: yes
+    state: present
