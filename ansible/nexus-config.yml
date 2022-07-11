@@ -49,7 +49,7 @@
   copy:
     content: |
       KEYSTORE_PATH=/opt/nexus/etc/ssl/keystore.jks
-      CERTBOT_DOMAIN={{ certbot[inventory].domain | replace('*.','') }}
+      CERTBOT_DOMAIN={{ certbot[inventory].path }}
     dest: /etc/sysconfig/nexus
 - name: Add cron script
   copy: 
