@@ -37,7 +37,7 @@
     name: certbot
     state: latest
 # - name: Setup/Renew certificate
-#   command: "certbot certonly --manual --email {{ certbot[inventory].email }} --preferred-challenges dns --agree-tos -d {{ certbot[inventory].domain }}"
+#   command: "certbot certonly --manual --email {{ nexus.email }} --preferred-challenges dns --agree-tos -d {{ nexus.domain }}"
 #   ignore_errors: yes
 - name: Install openssl and OpenJDK 11
   yum:
@@ -49,7 +49,7 @@
   copy:
     content: |
       KEYSTORE_PATH=/opt/nexus/etc/ssl/keystore.jks
-      CERTBOT_DOMAIN={{ certbot[inventory].path }}
+      CERTBOT_DOMAIN={{ nexus.path }}
     dest: /etc/sysconfig/nexus
 - name: Add cron script
   copy: 
@@ -65,7 +65,7 @@
     group: 200
 # - name: Gather the LetEncrypt certs into a single file  
 #   shell: |
-#     cat /etc/letsencrypt/live/{{ certbot[inventory].path }}/*.pem > ./keystore.pem
+#     cat /etc/letsencrypt/live/{{ nexus.path }}/*.pem > ./keystore.pem
 #     openssl pkcs12 -export -out /./keystore.pkcs12 -in ./keystore.pem -passout pass:password -name nexus
 #     rm -f ./keystore.jks
 #     keytool -v -importkeystore -srckeystore keystore.pkcs12 -destkeystore keystore.jks -deststoretype JKS -deststorepass password -srcstorepass password
@@ -78,8 +78,8 @@
 #     path: "/opt/nexus/etc/ssl/keystore.pkcs12"
 #     passphrase: password
 #     friendly_name: nexus
-#     privatekey_path: "/etc/letsencrypt/live/{{ certbot[inventory].path }}/privkey.pem"
-#     certificate_path: "/etc/letsencrypt/live/{{ certbot[inventory].path }}/fullchain.pem"
+#     privatekey_path: "/etc/letsencrypt/live/{{ nexus.path }}/privkey.pem"
+#     certificate_path: "/etc/letsencrypt/live/{{ nexus.path }}/fullchain.pem"
 #     # other_certificates_parse_all: yes
 #     # other_certificates: "/opt/nexus/etc/ssl/ca.txt"
 #     state: present

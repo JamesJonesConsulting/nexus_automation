@@ -14,7 +14,7 @@ parameters:
         agent_key: sgan_agent_key
         host_key: ymd_agent_key
         host_user: jamjon3
-        hostname: registry.jamjon3.sites.net
+        hostname: registry.apps.yourmessagedelivered.com
         pool: YMDAgents
         environment: ymdregistry
         registry: dh_registry
