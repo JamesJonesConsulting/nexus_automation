@@ -41,15 +41,27 @@
   yum:
     name: openssl
     state: latest
-- name: Gather the LetEncrypt certs into a single file  
-  shell: |
-    cat /etc/letsencrypt/live/{{ certbot[inventory].path }}/*.pem > ./keystore.pem
-    openssl pkcs12 -export -out /./keystore.pkcs12 -in ./keystore.pem -passout pass:password -name nexus
-    rm -f ./keystore.jks
-    keytool -v -importkeystore -srckeystore keystore.pkcs12 -destkeystore keystore.jks -deststoretype JKS -deststorepass password -srcstorepass password
-    rm -f ./keystore.pkcs12; rm -f ./keystore.pem
-  args:
-    chdir: /opt/nexus/etc/ssl/
+- name: Create the sysconfig file
+  copy:
+    content: |
+      KEYSTORE_PATH=/opt/nexus/etc/ssl/keystore.jks
+      CERTBOT_DOMAIN={{ certbot[inventory].domain | replace('*.','') }}
+    dest: /etc/sysconfig/nexus
+- name: Add cron script
+  copy: 
+    src: "{{ playbook_dir }}/files/updatecert"
+    dest: /etc/cron.daily/updatecert
+- name: Run the updatecert
+  command: /etc/cron.daily/updatecert
+# - name: Gather the LetEncrypt certs into a single file  
+#   shell: |
+#     cat /etc/letsencrypt/live/{{ certbot[inventory].path }}/*.pem > ./keystore.pem
+#     openssl pkcs12 -export -out /./keystore.pkcs12 -in ./keystore.pem -passout pass:password -name nexus
+#     rm -f ./keystore.jks
+#     keytool -v -importkeystore -srckeystore keystore.pkcs12 -destkeystore keystore.jks -deststoretype JKS -deststorepass password -srcstorepass password
+#     rm -f ./keystore.pkcs12; rm -f ./keystore.pem
+#   args:
+#     chdir: /opt/nexus/etc/ssl/
 # - name: Generate PKCS#12 file
 #   community.crypto.openssl_pkcs12:
 #     action: export
