@@ -51,6 +51,7 @@
   copy: 
     src: "{{ playbook_dir }}/files/updatecert"
     dest: /etc/cron.daily/updatecert
+    mode: 0755
 - name: Run the updatecert
   command: /etc/cron.daily/updatecert
 # - name: Gather the LetEncrypt certs into a single file  
