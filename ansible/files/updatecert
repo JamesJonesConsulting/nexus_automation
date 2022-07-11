@@ -12,11 +12,18 @@ if test -f "$KEYSTORE_PATH"; then
     PEM_UNTIL=$(openssl x509 -enddate -noout -in "/etc/letsencrypt/live/${CERTBOT_DOMAIN}/fullchain.pem" | sed 's/.*notAfter=//')
     PEM_END=$(date -d "$PEM_UNTIL" '+%Y-%m-%d')
     echo $PEM_END
-
     if [ "$KEYSTORE_END" = "$PEM_END" ]; then
-        echo "Strings are equal."
+        echo "No update required."
     else
-        echo "Strings are not equal."
+        echo "Certificate has been updated. Regenerating..."
+        systemctl stop container-nexus || true
+        KEYSTORE_BASEPATH=$(dirname "$KEYSTORE_PATH")
+        cat "/etc/letsencrypt/live/${CERTBOT_DOMAIN}/*.pem" > "${KEYSTORE_BASEPATH}/keystore.pem"
+        openssl pkcs12 -export -out "${KEYSTORE_BASEPATH}/keystore.pkcs12" -in "${KEYSTORE_BASEPATH}/keystore.pem" -passout pass:password -name nexus
+        rm -f "${KEYSTORE_PATH}"
+        keytool -v -importkeystore -srckeystore "${KEYSTORE_BASEPATH}/keystore.pkcs12" -destkeystore "${KEYSTORE_PATH}" -deststoretype JKS -deststorepass password -srcstorepass password
+        rm -f "${KEYSTORE_BASEPATH}/keystore.pkcs12"; rm -f "${KEYSTORE_BASEPATH}/keystore.pem"
+        systemctl start container-nexus || true
     fi
 else
     echo "$KEYSTORE_PATH doesn't exist."
