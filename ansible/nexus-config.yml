@@ -2,6 +2,8 @@
   file:
     path: "{{ nxspath }}"
     state: directory
+    owner: 200
+    group: 200
   loop:
     - /opt/nexus
     - /opt/nexus/etc
@@ -34,9 +36,9 @@
   yum:
     name: certbot
     state: latest
-- name: Setup/Renew certificate
-  command: "certbot certonly --manual --email {{ certbot[inventory].email }} --preferred-challenges dns --agree-tos -d {{ certbot[inventory].domain }}"
-  ignore_errors: yes
+# - name: Setup/Renew certificate
+#   command: "certbot certonly --manual --email {{ certbot[inventory].email }} --preferred-challenges dns --agree-tos -d {{ certbot[inventory].domain }}"
+#   ignore_errors: yes
 - name: Install openssl
   yum:
     name: openssl
@@ -54,6 +56,11 @@
     mode: 0755
 - name: Run the updatecert
   command: /etc/cron.daily/updatecert
+- name: Set the permissions on the JKS
+  file:
+    path: /opt/nexus/etc/ssl/keystore.jks
+    owner: 200
+    group: 200
 # - name: Gather the LetEncrypt certs into a single file  
 #   shell: |
 #     cat /etc/letsencrypt/live/{{ certbot[inventory].path }}/*.pem > ./keystore.pem
