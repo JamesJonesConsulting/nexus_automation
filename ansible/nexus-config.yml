@@ -39,9 +39,11 @@
 # - name: Setup/Renew certificate
 #   command: "certbot certonly --manual --email {{ certbot[inventory].email }} --preferred-challenges dns --agree-tos -d {{ certbot[inventory].domain }}"
 #   ignore_errors: yes
-- name: Install openssl
+- name: Install openssl and OpenJDK 11
   yum:
-    name: openssl
+    name: 
+      - openssl
+      - java-11-openjdk-headless
     state: latest
 - name: Create the sysconfig file
   copy:
