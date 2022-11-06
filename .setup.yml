@@ -101,10 +101,10 @@ jobs:
             #   displayName: 'image prune -f'
             #   inputs:
             #     command: 'image prune -f'
-            - task: Docker@2
-              displayName: 'system prune -f'
-              inputs:
-                command: system prune -f
+            # - task: Docker@2
+            #   displayName: 'system prune -f'
+            #   inputs:
+            #     command: system prune -f
             - task: CmdLine@2
               inputs:
                 script: 'sudo docker system prune -a --force' 
