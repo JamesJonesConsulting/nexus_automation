@@ -1,7 +1,7 @@
 .post.yml
 .prepare.yml
 .deploy.yml
-.setup.yml
+# .setup.yml
 docker*
 Dockerfile.*
 Jenkinsfile
