@@ -8,8 +8,9 @@ parameters:
   - name: nexus_ver
     displayName: Nexus Version
     type: string
-    default: 3.40.1
+    default: 3.42.0
     values:
+      - 3.42.0
       - 3.40.1
 trigger: none
 variables:
