@@ -14,27 +14,40 @@ parameters:
 trigger: none
 variables:
   - group: ansible
-stages:
-  - stage: PrePrepNexus
-    displayName: Setup Nexus Pre-Prep Host Requirements
-    jobs:
-      - template: .pre.yml
-        parameters:
-          network: ${{ parameters.network }}
-          version: ${{ parameters.nexus_ver }}
-          ${{ if in(parameters.network,'sgan')}}:
-            vault: $(YMD_ANSIBLE_VAULT_KEY)
-          ${{ if in(parameters.network,'ymd')}}:
-            vault: $(YMD_ANSIBLE_VAULT_KEY)
-      # - template: .deploy.yml
-      #   parameters:
-      #     version: ${{ parameters.nexus_ver }}
-      # - job: NexusHostPost
-      #   displayName: Setup boot persistance for Nexus containers
-      #   dependsOn:
-      #     - NexusDeployment
-      #   condition: succeeded()
-      #   steps:
-      #     - template: .post.yml
+
+extends: 
+  template: .setup.yml
+  parameters:
+    network: ${{ parameters.network }}
+    version: ${{ parameters.version }}
+    ${{ if in(parameters.network,'sgan')}}:
+      vault: $(YMD_ANSIBLE_VAULT_KEY)
+    ${{ if in(parameters.network,'ymd')}}:
+      vault: $(YMD_ANSIBLE_VAULT_KEY)
+
+# variables:
+#   - group: ansible
+# stages:
+#   - stage: PrePrepNexus
+#     displayName: Setup Nexus Pre-Prep Host Requirements
+#     jobs:
+#       - template: .pre.yml
+#         parameters:
+#           network: ${{ parameters.network }}
+#           version: ${{ parameters.nexus_ver }}
+#           ${{ if in(parameters.network,'sgan')}}:
+#             vault: $(YMD_ANSIBLE_VAULT_KEY)
+#           ${{ if in(parameters.network,'ymd')}}:
+#             vault: $(YMD_ANSIBLE_VAULT_KEY)
+#       # - template: .deploy.yml
+#       #   parameters:
+#       #     version: ${{ parameters.nexus_ver }}
+#       # - job: NexusHostPost
+#       #   displayName: Setup boot persistance for Nexus containers
+#       #   dependsOn:
+#       #     - NexusDeployment
+#       #   condition: succeeded()
+#       #   steps:
+#       #     - template: .post.yml
 
 
