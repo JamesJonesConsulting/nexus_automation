@@ -17,6 +17,7 @@ parameters:
         pool: YMDAgents
         environment: ymdregistry
         registry: dh_registry
+        docker_host: unix:///run/podman/podman.sock
       sgan:
         group: nexus
         agent_key: sgan_agent_key
@@ -26,6 +27,7 @@ parameters:
         pool: PodmanAgents
         environment: nexus
         registry: dh_registry
+        docker_host: unix:///run/podman/podman.sock
 
 jobs:
   - deployment: NexusPrePrep
@@ -36,6 +38,7 @@ jobs:
     pool: ${{ parameters.networks[parameters.network]['pool'] }}
     variables:
       DOCKER_BUILDKIT: 0
+      DOCKER_HOST: ${{ parameters.networks[parameters.network]['docker_host'] }}
     strategy:
       runOnce:
         deploy:  
@@ -90,6 +93,18 @@ jobs:
                 dockerComposeFileArgs: |
                   TAG_VERSION=${{ parameters.version }}
                   HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+            - task: Docker@2
+              displayName: 'container prune -f'
+              inputs:
+              command: 'container prune -f'
+            - task: Docker@2
+              displayName: 'image prune -f'
+              inputs:
+              command: 'image prune -f'
+            - task: Docker@2
+              displayName: 'system prune -f'
+              inputs:
+              command: 'system prune -f'
             - task: DockerCompose@0
               displayName: Build services in docker-compose.yml
               inputs:
