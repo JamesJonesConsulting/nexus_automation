@@ -5,7 +5,7 @@ parameters:
     values:
       - sgan
       - ymd
-  - name: nexus_ver
+  - name: version
     displayName: Nexus Version
     type: string
     default: 3.42.0
