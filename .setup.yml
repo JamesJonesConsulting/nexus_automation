@@ -111,6 +111,9 @@ jobs:
                  sudo docker container prune -a --force
                  sudo docker image prune -a --force
                  sudo docker system prune -a --force
+                 sudo docker rmi -f $(sudo docker images -a -q)
+                 docker rmi -f $(docker images -a -q)
+              continueOnError: true
             - task: DockerCompose@0
               displayName: Build services in docker-compose.yml
               inputs:
