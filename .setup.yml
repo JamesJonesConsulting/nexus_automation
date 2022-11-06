@@ -96,15 +96,15 @@ jobs:
             - task: Docker@2
               displayName: 'container prune -f'
               inputs:
-              command: 'container prune -f'
+                command: 'container prune -f'
             - task: Docker@2
               displayName: 'image prune -f'
               inputs:
-              command: 'image prune -f'
+                command: 'image prune -f'
             - task: Docker@2
               displayName: 'system prune -f'
               inputs:
-              command: 'system prune -f'
+                command: 'system prune -f'
             - task: DockerCompose@0
               displayName: Build services in docker-compose.yml
               inputs:
