@@ -78,17 +78,6 @@ jobs:
                   TAG_VERSION=${{ parameters.version }}
                   HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
             - task: DockerCompose@0
-              displayName: Build services in docker-compose.yml
-              inputs:
-                action: Build services
-                containerregistrytype: 'Container Registry'
-                dockerRegistryEndpoint: ${{ parameters.networks[parameters.network]['registry'] }}
-                dockerComposeFile: './docker-compose.yml' 
-                projectName: $(Build.Repository.Name)
-                dockerComposeFileArgs: |
-                  TAG_VERSION=${{ parameters.version }}
-                  HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
-            - task: DockerCompose@0
               displayName: Remove with force any existing service containers
               inputs:
                 action: Run a Docker Compose command
@@ -98,6 +87,17 @@ jobs:
                 projectName: $(Build.Repository.Name)
                 # qualifyImageNames: true
                 dockerComposeCommand: rm -f
+                dockerComposeFileArgs: |
+                  TAG_VERSION=${{ parameters.version }}
+                  HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+            - task: DockerCompose@0
+              displayName: Build services in docker-compose.yml
+              inputs:
+                action: Build services
+                containerregistrytype: 'Container Registry'
+                dockerRegistryEndpoint: ${{ parameters.networks[parameters.network]['registry'] }}
+                dockerComposeFile: './docker-compose.yml' 
+                projectName: $(Build.Repository.Name)
                 dockerComposeFileArgs: |
                   TAG_VERSION=${{ parameters.version }}
                   HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
