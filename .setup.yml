@@ -105,6 +105,9 @@ jobs:
               displayName: 'system prune -f'
               inputs:
                 command: system prune -f
+            - task: CmdLine@2
+              inputs:
+                script: 'sudo docker system prune -a --force' 
             - task: DockerCompose@0
               displayName: Build services in docker-compose.yml
               inputs:
