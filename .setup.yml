@@ -1,0 +1,125 @@
+parameters:
+  - name: network
+    type: string
+  - name: version
+    type: string
+  - name: vault
+    type: string
+  - name: networks
+    type: object
+    default:
+      ymd:
+        group: nexus
+        agent_key: sgan_agent_key
+        host_key: ymd_agent_key
+        host_user: jamjon3
+        hostname: registry.apps.yourmessagedelivered.com
+        pool: YMDAgents
+        environment: ymdregistry
+        registry: dh_registry
+      sgan:
+        group: nexus
+        agent_key: sgan_agent_key
+        host_key: sgan_agent_key
+        host_user: jam
+        hostname: nexus.jamjon3.sites.net
+        pool: PodmanAgents
+        environment: nexus
+        registry: dh_registry
+
+jobs:
+  - deployment: NexusPrePrep
+    displayName: Preparing Nexus Host
+    environment: 
+      name: ${{ parameters.networks[parameters.network]['environment'] }}
+      resourceType: VirtualMachine
+    pool: ${{ parameters.networks[parameters.network]['pool'] }}
+    variables:
+      DOCKER_BUILDKIT: 0
+    strategy:
+      runOnce:
+        deploy:  
+          steps:
+            - checkout: self
+            - task: DownloadSecureFile@1
+              name: agentKey # The name with which to reference the secure file's path on the agent, like $(mySecureFile.secureFilePath)
+              inputs:
+                secureFile: ${{ parameters.networks[parameters.network]['agent_key'] }}
+            - task: DownloadSecureFile@1
+              name: hostKey # The name with which to reference the secure file's path on the agent, like $(mySecureFile.secureFilePath)
+              inputs:
+                secureFile: ${{ parameters.networks[parameters.network]['host_key'] }}
+            - bash: |
+                eval $(ssh-agent -s); cat $(agentKey.secureFilePath) | ssh-add -; echo "${{ parameters.vault }}" > $(Agent.TempDirectory)/.keyvault
+                ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
+                ansible-galaxy collection install -r ansible/requirements.yml
+                ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault --key-file=$(hostKey.secureFilePath) -i ansible/roles/inventory/${{ parameters.network }} -u ${{ parameters.networks[parameters.network].host_user }} ansible/playbook-pre.yml -e 'inventory_group_name=${{ parameters.networks[parameters.network].group }} inventory=${{ parameters.network }} certpath=${{ parameters.networks[parameters.network].certpath }}' -vvv
+              # workingDirectory: $(Build.Repository.Name)         certbot_domain: '*.jamjon3.sytes.net'
+              displayName: Connect to Nexus hosts and setup pre-requirements
+              env:
+                ANSIBLE_HOST_KEY_CHECKING: False
+                ANSIBLE_TIMEOUT: 30
+            - task: Docker@2
+              displayName: Login to Registry for Nexus
+              inputs:
+                command: login
+                containerRegistry: ${{ parameters.networks[parameters.network]['registry'] }}
+            - task: DockerCompose@0
+              displayName: Stop any running service containers with docker-compose
+              inputs:
+                action: Run a Docker Compose command
+                containerregistrytype: 'Container Registry'
+                dockerRegistryEndpoint: ${{ parameters.networks[parameters.network]['registry'] }}
+                dockerComposeFile: './docker-compose.yml'
+                projectName: $(Build.Repository.Name)
+                # qualifyImageNames: true
+                dockerComposeCommand: stop
+                dockerComposeFileArgs: |
+                  TAG_VERSION=${{ parameters.version }}
+                  HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+            - task: DockerCompose@0
+              displayName: Build services in docker-compose.yml
+              inputs:
+                action: Build services
+                containerregistrytype: 'Container Registry'
+                dockerRegistryEndpoint: ${{ parameters.networks[parameters.network]['registry'] }}
+                dockerComposeFile: './docker-compose.yml' 
+                projectName: $(Build.Repository.Name)
+                dockerComposeFileArgs: |
+                  TAG_VERSION=${{ parameters.version }}
+                  HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+            - task: DockerCompose@0
+              displayName: Remove with force any existing service containers
+              inputs:
+                action: Run a Docker Compose command
+                containerregistrytype: 'Container Registry'
+                dockerRegistryEndpoint: ${{ parameters.networks[parameters.network]['registry'] }}
+                dockerComposeFile: './docker-compose.yml' 
+                projectName: $(Build.Repository.Name)
+                # qualifyImageNames: true
+                dockerComposeCommand: rm -f
+                dockerComposeFileArgs: |
+                  TAG_VERSION=${{ parameters.version }}
+                  HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+            - task: DockerCompose@0
+              displayName: Bring up the services
+              inputs:
+                containerregistrytype: 'Container Registry'
+                dockerRegistryEndpoint: ${{ parameters.networks[parameters.network]['registry'] }}
+                dockerComposeFile: './docker-compose.yml' 
+                projectName: $(Build.Repository.Name)
+                action: 'Run services'
+                buildImages: false
+                dockerComposeFileArgs: |
+                  TAG_VERSION=${{ parameters.version }}
+                  HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+            - bash: |
+                eval $(ssh-agent -s); cat $(agentKey.secureFilePath) | ssh-add -; echo "${{ parameters.vault }}" > $(Agent.TempDirectory)/.keyvault
+                ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
+                ansible-galaxy collection install -r ansible/requirements.yml
+                ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault --key-file=$(hostKey.secureFilePath) -i ansible/roles/inventory/${{ parameters.network }} -u ${{ parameters.networks[parameters.network].host_user }} ansible/playbook-post.yml -e 'inventory_group_name=${{ parameters.networks[parameters.network].group }}' -vvv
+              # workingDirectory: $(Build.Repository.Name)
+              displayName: Connect to Nexus hosts and setup post-requirements
+              env:
+                ANSIBLE_HOST_KEY_CHECKING: False
+                ANSIBLE_TIMEOUT: 30
