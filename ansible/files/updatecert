@@ -4,6 +4,17 @@
 
 echo "$KEYSTORE_PATH"
 
+function renewkeystore {
+    KEYSTORE_BASEPATH=$(dirname "$KEYSTORE_PATH")
+    systemctl stop container-nexus || true
+    cat /etc/letsencrypt/live/$CERTBOT_DOMAIN/*.pem > $KEYSTORE_BASEPATH/keystore.pem
+    openssl pkcs12 -export -out "${KEYSTORE_BASEPATH}/keystore.pkcs12" -in "${KEYSTORE_BASEPATH}/keystore.pem" -passout pass:password -name nexus
+    rm -f "${KEYSTORE_PATH}"
+    keytool -v -importkeystore -srckeystore "${KEYSTORE_BASEPATH}/keystore.pkcs12" -destkeystore "${KEYSTORE_PATH}" -deststoretype JKS -deststorepass password -srcstorepass password
+    rm -f "${KEYSTORE_BASEPATH}/keystore.pkcs12"; rm -f "${KEYSTORE_BASEPATH}/keystore.pem"
+    systemctl restart container-nexus || true
+}
+
 if test -f "$KEYSTORE_PATH"; then
     echo "$KEYSTORE_PATH exists."
     KEYSTORE_UNTIL=$(echo 'password' | keytool -list -v -keystore $KEYSTORE_PATH 2>/dev/null | grep -i 'until' | sed 's/.*until: //' | head -n1)
@@ -16,21 +27,9 @@ if test -f "$KEYSTORE_PATH"; then
         echo "No update required."
     else
         echo "Certificate has been updated. Regenerating..."
-        systemctl stop container-nexus || true
-        KEYSTORE_BASEPATH=$(dirname "$KEYSTORE_PATH")
-        cat /etc/letsencrypt/live/${CERTBOT_DOMAIN}/*.pem > ${KEYSTORE_BASEPATH}/keystore.pem
-        openssl pkcs12 -export -out "${KEYSTORE_BASEPATH}/keystore.pkcs12" -in "${KEYSTORE_BASEPATH}/keystore.pem" -passout pass:password -name nexus
-        rm -f "${KEYSTORE_PATH}"
-        keytool -v -importkeystore -srckeystore "${KEYSTORE_BASEPATH}/keystore.pkcs12" -destkeystore "${KEYSTORE_PATH}" -deststoretype JKS -deststorepass password -srcstorepass password
-        rm -f "${KEYSTORE_BASEPATH}/keystore.pkcs12"; rm -f "${KEYSTORE_BASEPATH}/keystore.pem"
-        systemctl start container-nexus || true
+        renewkeystore
     fi
 else
     echo "$KEYSTORE_PATH doesn't exist."
-    KEYSTORE_BASEPATH=$(dirname "$KEYSTORE_PATH")
-    cat /etc/letsencrypt/live/${CERTBOT_DOMAIN}/*.pem > ${KEYSTORE_BASEPATH}/keystore.pem
-    openssl pkcs12 -export -out "${KEYSTORE_BASEPATH}/keystore.pkcs12" -in "${KEYSTORE_BASEPATH}/keystore.pem" -passout pass:password -name nexus
-    rm -f "${KEYSTORE_PATH}"
-    keytool -v -importkeystore -srckeystore "${KEYSTORE_BASEPATH}/keystore.pkcs12" -destkeystore "${KEYSTORE_PATH}" -deststoretype JKS -deststorepass password -srcstorepass password
-    rm -f "${KEYSTORE_BASEPATH}/keystore.pkcs12"; rm -f "${KEYSTORE_BASEPATH}/keystore.pem"
+    renewkeystore
 fi
