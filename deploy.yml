@@ -15,16 +15,33 @@ parameters:
 trigger: none
 variables:
   - group: ansible
+  - group: openldap
 
 extends: 
   template: .setup.yml
   parameters:
     network: ${{ parameters.network }}
-    version: ${{ parameters.version }}
+    version: 
+      openldap: latest
+      nexus3: ${{ parameters.version }}
     ${{ if in(parameters.network,'sgan')}}:
       vault: $(YMD_ANSIBLE_VAULT_KEY)
+      ldap:
+        root: $(SGAN_LDAP_ROOT)
+        user: $(SGAN_USER)
+        password: $(SGAN_PASSWORD)
+        admin:
+          user: $(SGAN_ADMIN_USER)
+          password: $(SGAN_ADMIN_PASSWORD)
     ${{ if in(parameters.network,'ymd')}}:
       vault: $(YMD_ANSIBLE_VAULT_KEY)
+      ldap:
+        root: $(YMD_LDAP_ROOT)
+        user: $(YMD_USER)
+        password: $(YMD_PASSWORD)
+        admin:
+          user: $(YMD_ADMIN_USER)
+          password: $(YMD_ADMIN_PASSWORD)
 
 # variables:
 #   - group: ansible

@@ -2,9 +2,11 @@ parameters:
   - name: network
     type: string
   - name: version
-    type: string
+    type: object
   - name: vault
     type: string
+  - name: ldap
+    type: object
   - name: networks
     type: object
     default:
@@ -78,8 +80,14 @@ jobs:
                 # qualifyImageNames: true
                 dockerComposeCommand: stop
                 dockerComposeFileArgs: |
-                  TAG_VERSION=${{ parameters.version }}
+                  TAG_VERSION=${{ parameters.version.nexus3 }}
+                  OPENLDAP_TAG_VERSION=${{ parameters.version.openldap }}
                   HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+                  LDAP_ROOT=${{ parameters.networks[parameters.ldap]['root'] }}
+                  LDAP_USER=${{ parameters.networks[parameters.ldap]['user'] }}
+                  LDAP_PASSWORD=${{ parameters.networks[parameters.ldap]['password'] }}
+                  LDAP_ADMIN_USER=${{ parameters.networks[parameters.ldap]['admin']['user'] }}
+                  LDAP_ADMIN_PASSWORD=${{ parameters.networks[parameters.ldap]['admin']['password'] }}
             - task: DockerCompose@0
               displayName: Remove with force any existing service containers
               inputs:
@@ -91,8 +99,14 @@ jobs:
                 # qualifyImageNames: true
                 dockerComposeCommand: rm -f
                 dockerComposeFileArgs: |
-                  TAG_VERSION=${{ parameters.version }}
+                  TAG_VERSION=${{ parameters.version.nexus3 }}
+                  OPENLDAP_TAG_VERSION=${{ parameters.version.openldap }}
                   HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+                  LDAP_ROOT=${{ parameters.networks[parameters.ldap]['root'] }}
+                  LDAP_USER=${{ parameters.networks[parameters.ldap]['user'] }}
+                  LDAP_PASSWORD=${{ parameters.networks[parameters.ldap]['password'] }}
+                  LDAP_ADMIN_USER=${{ parameters.networks[parameters.ldap]['admin']['user'] }}
+                  LDAP_ADMIN_PASSWORD=${{ parameters.networks[parameters.ldap]['admin']['password'] }}
             # - task: Docker@2
             #   displayName: 'container prune -f'
             #   inputs:
@@ -123,8 +137,14 @@ jobs:
                 dockerComposeFile: './docker-compose.yml' 
                 projectName: $(Build.Repository.Name)
                 dockerComposeFileArgs: |
-                  TAG_VERSION=${{ parameters.version }}
+                  TAG_VERSION=${{ parameters.version.nexus3 }}
+                  OPENLDAP_TAG_VERSION=${{ parameters.version.openldap }}
                   HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+                  LDAP_ROOT=${{ parameters.networks[parameters.ldap]['root'] }}
+                  LDAP_USER=${{ parameters.networks[parameters.ldap]['user'] }}
+                  LDAP_PASSWORD=${{ parameters.networks[parameters.ldap]['password'] }}
+                  LDAP_ADMIN_USER=${{ parameters.networks[parameters.ldap]['admin']['user'] }}
+                  LDAP_ADMIN_PASSWORD=${{ parameters.networks[parameters.ldap]['admin']['password'] }}
             - task: DockerCompose@0
               displayName: Bring up the services
               inputs:
@@ -135,8 +155,14 @@ jobs:
                 action: 'Run services'
                 buildImages: false
                 dockerComposeFileArgs: |
-                  TAG_VERSION=${{ parameters.version }}
+                  TAG_VERSION=${{ parameters.version.nexus3 }}
+                  OPENLDAP_TAG_VERSION=${{ parameters.version.openldap }}
                   HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+                  LDAP_ROOT=${{ parameters.networks[parameters.ldap]['root'] }}
+                  LDAP_USER=${{ parameters.networks[parameters.ldap]['user'] }}
+                  LDAP_PASSWORD=${{ parameters.networks[parameters.ldap]['password'] }}
+                  LDAP_ADMIN_USER=${{ parameters.networks[parameters.ldap]['admin']['user'] }}
+                  LDAP_ADMIN_PASSWORD=${{ parameters.networks[parameters.ldap]['admin']['password'] }}
             - bash: |
                 eval $(ssh-agent -s); cat $(agentKey.secureFilePath) | ssh-add -; echo "${{ parameters.vault }}" > $(Agent.TempDirectory)/.keyvault
                 ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles

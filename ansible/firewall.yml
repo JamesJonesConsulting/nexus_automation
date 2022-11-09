@@ -1,7 +1,13 @@
 ---
-- name: Allow SELinux port access
+- name: Allow SELinux port access (nexus)
   seport:
     ports: 443, 5443, 5444, 5445, 5446, 5447
+    proto: tcp
+    setype: http_port_t
+    state: present
+- name: Allow SELinux port access (openldap)
+  seport:
+    ports: 1389, 1636
     proto: tcp
     setype: http_port_t
     state: present
@@ -14,6 +20,10 @@
   template:
     src: "{{ playbook_dir }}/files/docker-registry-ssl.xml"
     dest: /etc/firewalld/services/docker-registry-ssl.xml
+- name: Add Docker Repo Firewalld service (RHEL)
+  template:
+    src: "{{ playbook_dir }}/files/openldap.xml"
+    dest: /etc/firewalld/services/openldap.xml
 - name: restart firewalld
   service:
     name: firewalld
@@ -26,6 +36,7 @@
   loop:
     - https
     - docker-registry-ssl
+    - openldap
   loop_control:
     loop_var: srv_name
 - name: restart firewalld

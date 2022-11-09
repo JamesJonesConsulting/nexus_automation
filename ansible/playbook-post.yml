@@ -4,6 +4,17 @@
   vars_files:
     - ./vars/main.yml
   tasks:
+    - name: Generate Systemd for Openldap
+      command: "podman generate systemd --restart-policy=always -t 1 --name openldap -f"
+      register: sdgen
+      args:
+        chdir: /etc/systemd/system
+    - name: Enable systemd service
+      systemd:
+        name: container-openldap
+        state: restarted
+        daemon_reload: yes
+        enabled: yes
     - name: Generate Systemd for Nexus
       command: "podman generate systemd --restart-policy=always -t 1 --name nexus -f"
       register: sdgen

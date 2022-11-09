@@ -1,0 +1,3 @@
+ARG OPENLDAP_TAG_VERSION
+FROM docker.io/bitnami/openldap:${OPENLDAP_TAG_VERSION}
+

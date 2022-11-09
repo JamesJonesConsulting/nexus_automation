@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>Openldap Service Ports</short>
+  <description>Openldap service firewalld port exceptions</description>
+  <port protocol="tcp" port="1389"/>
+  <port protocol="tcp" port="1636"/>
+</service>

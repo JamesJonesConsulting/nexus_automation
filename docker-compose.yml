@@ -1,5 +1,43 @@
 version: "3.3"
 services:
+  ldap:
+    restart: always
+    build: 
+      context: .
+      dockerfile: Dockerfile.openldap
+      args:
+        TAG_VERSION: ${TAG_VERSION}
+    cap_add:
+      - ALL
+    stop_grace_period: 3600s
+    container_name: openldap
+    hostname: ${HOST_NAME}
+    ports:
+      - "1389:1389"
+      - "1636:1636"
+    environment:
+      - LDAP_ADMIN_USERNAME=${LDAP_ADMIN_USER}
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD}
+      - LDAP_USERS=${LDAP_USER}
+      - LDAP_PASSWORDS=${LDAP_PASSWORD}
+      - LDAP_ROOT=${LDAP_ROOT}
+      - LDAP_ENABLE_TLS=yes
+      - LDAP_TLS_CERT_FILE=/opt/bitnami/openldap/certs/openldap.crt
+      - LDAP_TLS_KEY_FILE=/opt/bitnami/openldap/certs/openldap.key
+      - LDAP_TLS_CA_FILE=/opt/bitnami/openldap/certs/openldapCA.crt
+    networks:
+      nexusnet:
+        aliases:
+          - nxs
+    volumes:
+      - /opt/openldap:/bitnami/openldap:Z
+      - /etc/letsencrypt/live/${HOST_NAME}/cert.pem:/opt/bitnami/openldap/certs/openldap.crt:Z 
+      - /etc/letsencrypt/live/${HOST_NAME}/chain.pem:/opt/bitnami/openldap/certs/openldapCA.crt:Z
+      - /etc/letsencrypt/live/${HOST_NAME}/privkey.pem:/opt/bitnami/openldap/certs/openldap.key:Z
+    logging:
+      driver: journald
+      options:
+        tag: nexus
   nexus3:
     restart: always
     build:
