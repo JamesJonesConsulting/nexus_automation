@@ -21,39 +21,6 @@
     - /opt/openldap/certs
   loop_control:
     loop_var: nxspath
-- name: Cat up the certificates 
-  shell: |
-    cat ./{{ cert }}.pem
-  args:
-    chdir: "{{ lookup('env','LETSENCRYPT_HOST') }}"
-  loop:
-    - cert
-    - chain
-    - privkey
-  loop_control:
-    loop_var: cert 
-  register: letsencrypt_certs
-# - name: Slurp up the certificates 
-#   slurp:
-#     src: "{{ lookup('env','LETSENCRYPT_HOST') }}/{{ cert }}.pem"
-#   loop:
-#     - cert
-#     - chain
-#     - privkey
-#   loop_control:
-#     loop_var: cert 
-#   register: letsencrypt_certs
-- debug:
-    msg: "{{ letsencrypt_certs }}"
-# - name: Write out certs 
-#   copy:
-#     content: "{{ mounts['content'] | b64decode }}"
-#     dest: "/opt/openldap/certs/{{ cert }}"
-#     owner: 1001
-#     group: 1001
-#   loop: "{{ letsencrypt_certs }}"
-#   loop_control:
-#     loop_var: cert
 - name: Adding SSL Application Port
   ini_file:
     path: "/opt/nexus/etc/nexus.properties"
@@ -92,6 +59,7 @@
 - name: Create the sysconfig file
   copy:
     content: |
+      OPENLDAP_CERTS=/opt/openldap/certs
       KEYSTORE_PATH=/opt/nexus/etc/ssl/keystore.jks
       CERTBOT_DOMAIN={{ hostvars[groups[inventory_group_name] | first].nexus.path }}
     dest: /etc/sysconfig/nexus
