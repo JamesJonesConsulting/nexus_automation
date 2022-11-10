@@ -16,6 +16,7 @@ parameters:
         host_key: ymd_agent_key
         host_user: jamjon3
         hostname: registry.apps.yourmessagedelivered.com
+        letsencrypt_host: apps.yourmessagedelivered.com
         pool: YMDAgents
         environment: ymdregistry
         registry: dh_registry
@@ -26,6 +27,7 @@ parameters:
         host_key: sgan_agent_key
         host_user: jam
         hostname: nexus.jamjon3.sites.net
+        letsencrypt_host: jamjon3.sites.net
         pool: PodmanAgents
         environment: nexus
         registry: dh_registry
@@ -83,6 +85,7 @@ jobs:
                   TAG_VERSION=${{ parameters.version.nexus3 }}
                   OPENLDAP_TAG_VERSION=${{ parameters.version.openldap }}
                   HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+                  LETSENCRYPT_HOST=${{ parameters.networks[parameters.network].letsencrypt_host }}
                   LDAP_ROOT=${{ parameters.networks[parameters.ldap]['root'] }}
                   LDAP_USER=${{ parameters.networks[parameters.ldap]['user'] }}
                   LDAP_PASSWORD=${{ parameters.networks[parameters.ldap]['password'] }}
@@ -102,6 +105,7 @@ jobs:
                   TAG_VERSION=${{ parameters.version.nexus3 }}
                   OPENLDAP_TAG_VERSION=${{ parameters.version.openldap }}
                   HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+                  LETSENCRYPT_HOST=${{ parameters.networks[parameters.network].letsencrypt_host }}
                   LDAP_ROOT=${{ parameters.networks[parameters.ldap]['root'] }}
                   LDAP_USER=${{ parameters.networks[parameters.ldap]['user'] }}
                   LDAP_PASSWORD=${{ parameters.networks[parameters.ldap]['password'] }}
@@ -140,6 +144,7 @@ jobs:
                   TAG_VERSION=${{ parameters.version.nexus3 }}
                   OPENLDAP_TAG_VERSION=${{ parameters.version.openldap }}
                   HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+                  LETSENCRYPT_HOST=${{ parameters.networks[parameters.network].letsencrypt_host }}
                   LDAP_ROOT=${{ parameters.networks[parameters.ldap]['root'] }}
                   LDAP_USER=${{ parameters.networks[parameters.ldap]['user'] }}
                   LDAP_PASSWORD=${{ parameters.networks[parameters.ldap]['password'] }}
@@ -158,6 +163,7 @@ jobs:
                   TAG_VERSION=${{ parameters.version.nexus3 }}
                   OPENLDAP_TAG_VERSION=${{ parameters.version.openldap }}
                   HOST_NAME=${{ parameters.networks[parameters.network]['hostname'] }}
+                  LETSENCRYPT_HOST=${{ parameters.networks[parameters.network].letsencrypt_host }}
                   LDAP_ROOT=${{ parameters.networks[parameters.ldap]['root'] }}
                   LDAP_USER=${{ parameters.networks[parameters.ldap]['user'] }}
                   LDAP_PASSWORD=${{ parameters.networks[parameters.ldap]['password'] }}

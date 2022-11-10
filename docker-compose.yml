@@ -31,9 +31,9 @@ services:
           - nxs
     volumes:
       - /opt/openldap:/bitnami/openldap:Z
-      - /etc/letsencrypt/live/${HOST_NAME}/cert.pem:/opt/bitnami/openldap/certs/openldap.crt:Z 
-      - /etc/letsencrypt/live/${HOST_NAME}/chain.pem:/opt/bitnami/openldap/certs/openldapCA.crt:Z
-      - /etc/letsencrypt/live/${HOST_NAME}/privkey.pem:/opt/bitnami/openldap/certs/openldap.key:Z
+      - /etc/letsencrypt/live/${LETSENCRYPT_HOST}/cert.pem:/opt/bitnami/openldap/certs/openldap.crt:Z 
+      - /etc/letsencrypt/live/${LETSENCRYPT_HOST}/chain.pem:/opt/bitnami/openldap/certs/openldapCA.crt:Z
+      - /etc/letsencrypt/live/${LETSENCRYPT_HOST}/privkey.pem:/opt/bitnami/openldap/certs/openldap.key:Z
     logging:
       driver: journald
       options:
