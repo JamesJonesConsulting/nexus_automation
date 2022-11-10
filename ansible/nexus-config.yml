@@ -21,6 +21,25 @@
     - /opt/openldap/certs
   loop_control:
     loop_var: nxspath
+- name: Slurp up the certificates 
+  slurp:
+    src: "{{ lookup('env','LETSENCRYPT_HOST' }}/{{ cert }}.pem"
+  loop:
+    - cert
+    - chain
+    - privkey
+  loop_control:
+    loop_var: cert 
+  register: letsencrypt_certs
+- debug:
+    msg: "{{ letsencrypt_certs }}"
+# - name: Write out certs 
+#   copy:
+#     content: "{{ mounts['content'] | b64decode }}"
+#     dest: "/opt/openldap/certs/{{ cert }}"
+#   loop: "{{ letsencrypt_certs }}"
+#   loop_control:
+#     loop_var: cert
 - name: Adding SSL Application Port
   ini_file:
     path: "/opt/nexus/etc/nexus.properties"
