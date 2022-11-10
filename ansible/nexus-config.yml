@@ -21,9 +21,11 @@
     - /opt/openldap/certs
   loop_control:
     loop_var: nxspath
-- name: Slurp up the certificates 
-  slurp:
-    src: "{{ lookup('env','LETSENCRYPT_HOST') }}/{{ cert }}.pem"
+- name: Cat up the certificates 
+  shell: |
+    cat ./{{ cert }}.pem
+  args:
+    chdir: "{{ lookup('env','LETSENCRYPT_HOST') }}"
   loop:
     - cert
     - chain
@@ -31,6 +33,16 @@
   loop_control:
     loop_var: cert 
   register: letsencrypt_certs
+# - name: Slurp up the certificates 
+#   slurp:
+#     src: "{{ lookup('env','LETSENCRYPT_HOST') }}/{{ cert }}.pem"
+#   loop:
+#     - cert
+#     - chain
+#     - privkey
+#   loop_control:
+#     loop_var: cert 
+#   register: letsencrypt_certs
 - debug:
     msg: "{{ letsencrypt_certs }}"
 # - name: Write out certs 
