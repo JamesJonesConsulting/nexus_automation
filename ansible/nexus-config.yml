@@ -23,7 +23,7 @@
     loop_var: nxspath
 - name: Slurp up the certificates 
   slurp:
-    src: "{{ lookup('env','LETSENCRYPT_HOST' }}/{{ cert }}.pem"
+    src: "{{ lookup('env','LETSENCRYPT_HOST') }}/{{ cert }}.pem"
   loop:
     - cert
     - chain
@@ -37,6 +37,8 @@
 #   copy:
 #     content: "{{ mounts['content'] | b64decode }}"
 #     dest: "/opt/openldap/certs/{{ cert }}"
+#     owner: 1001
+#     group: 1001
 #   loop: "{{ letsencrypt_certs }}"
 #   loop_control:
 #     loop_var: cert
