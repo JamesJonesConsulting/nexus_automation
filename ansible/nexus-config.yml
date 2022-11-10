@@ -8,6 +8,8 @@
     - /opt/nexus
     - /opt/nexus/etc
     - /opt/nexus/etc/ssl
+  loop_control:
+    loop_var: nxspath
 - name: Adding some folders for binding
   file:
     path: "{{ nxspath }}"
