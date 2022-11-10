@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile.openldap
       args:
-        TAG_VERSION: ${TAG_VERSION}
+        TAG_VERSION: ${OPENLDAP_TAG_VERSION}
     cap_add:
       - ALL
     stop_grace_period: 3600s
