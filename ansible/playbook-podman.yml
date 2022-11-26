@@ -18,10 +18,25 @@
           - openssl
           - java-11-openjdk-headless
         state: present
+    - name: Create a temp directory for Docker files
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: docker
+      register: dck_path
+    - name: Copy over the Dockerfile's
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/files/{{ dkrfile }}"
+        dest: "{{ dck_path.path }}/{{ dkrfile }}"
+        mode: 0755
+      loop:
+        - Dockerfile.nexus3
+        - Dockerfile.openldap
+      loop_control:
+        loop_var: dkrfile
     - name: Build OpenLDAP OCI Image
       containers.podman.podman_image:
         name: ldap
-        path: ../
+        path: "{{ dck_path.path }}"
         build:
           cache: false
           force_rm: true
@@ -97,7 +112,7 @@
     - name: Build Nexus3 OCI Image
       containers.podman.podman_image:
         name: nexus
-        path: ../
+        path: "{{ dck_path.path }}"
         build:
           cache: false
           force_rm: true
@@ -218,3 +233,8 @@
       ansible.builtin.systemd:
         name: container-nexus
         state: restarted
+    - name: Remove the temporary directory
+      ansible.builtin.file:
+        path: "{{ dck_path.path }}"
+        state: absent
+      when: "dck_path.path is defined"
