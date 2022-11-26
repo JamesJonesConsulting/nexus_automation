@@ -26,10 +26,14 @@
     src: "{{ playbook_dir }}/files/openldap.xml"
     dest: /etc/firewalld/services/openldap.xml
     mode: '0644'
-- name: Restart firewalld
+- name: Stop firewalld
   ansible.builtin.service:
     name: firewalld
-    state: restarted
+    state: stopped
+- name: Start firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: started
 - name: Enable services on the VM Host
   ansible.posix.firewalld:
     service: "{{ srv_name }}"
@@ -41,7 +45,11 @@
     - openldap
   loop_control:
     loop_var: srv_name
-- name: Restart firewalld
+- name: Stop firewalld
   ansible.builtin.service:
     name: firewalld
-    state: restarted
+    state: stopped
+- name: Start firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: started
