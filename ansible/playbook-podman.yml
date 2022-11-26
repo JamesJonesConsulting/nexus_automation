@@ -1,0 +1,220 @@
+---
+- name: Prepare the host for Nexus
+  hosts: "{{ inventory_group_name | default('nexus') }}"
+  # connection: local
+  become: true
+  vars_files:
+    - ./vars/main.yml
+  tasks:
+    - name: Setup firewall
+      include_tasks: firewall.yml
+    - name: Install certbot
+      ansible.builtin.yum:
+        name: certbot
+        state: present
+    - name: Install openssl and OpenJDK 11
+      ansible.builtin.yum:
+        name:
+          - openssl
+          - java-11-openjdk-headless
+        state: present
+    - name: Build OpenLDAP OCI Image
+      containers.podman.podman_image:
+        name: ldap
+        path: ../
+        build:
+          cache: false
+          force_rm: true
+          format: oci
+          extra_args: "-f Dockerfile.openldap --build-arg TAG_VERSION={{ lookup('env', 'OPENLDAP_TAG_VERSION') }}"
+          annotation:
+            app: openldap
+            function: Creates an LDAP server for managing accounts
+            info: Provides LDAP services to internal applications
+    - name: Adding some folders for binding
+      ansible.builtin.file:
+        path: "{{ nxspath }}"
+        state: directory
+        owner: 1001
+        group: 1001
+        mode: '0755'
+      loop:
+        - /opt/openldap
+        - /opt/openldap/certs
+      loop_control:
+        loop_var: nxspath
+    - name: Stop any existing Nexus3 service
+      ansible.builtin.systemd:
+        name: container-nexus
+        state: stopped
+      register: sysd
+      failed_when: "sysd.stdout | length < 1"
+    - name: Re-create ldap container with systemd service file generated
+      containers.podman.podman_container:
+        name: ldap
+        image: localhost/ldap
+        state: started
+        recreate: true
+        privileged: true
+        hostname: "{{ lookup('env', 'HOST_NAME') }}"
+        cap_add:
+          - ALL
+        stop_timeout: 3600
+        log_driver: journald
+        log_opt:
+          tag: ldap
+          max_size: 10mb
+        ports:
+          - "1389:1389"
+          - "1636:1636"
+        expose:
+          - "1389"
+          - "1636"
+        env:
+          LDAP_ADMIN_USERNAME: "{{ lookup('env', 'LDAP_ADMIN_USER') }}"
+          LDAP_ADMIN_PASSWORD: "{{ lookup('env', 'LDAP_ADMIN_PASSWORD') }}"
+          LDAP_USERS: "{{ lookup('env', 'LDAP_USER') }}"
+          LDAP_PASSWORDS: "{{ lookup('env', 'LDAP_PASSWORD') }}"
+          LDAP_ROOT: "{{ lookup('env', 'LDAP_ROOT') }}"
+          LDAP_ENABLE_TLS: 'yes'
+          LDAP_TLS_CERT_FILE: /opt/bitnami/openldap/certs/openldap.crt
+          LDAP_TLS_KEY_FILE: /opt/bitnami/openldap/certs/openldap.key
+          LDAP_TLS_CA_FILE: /opt/bitnami/openldap/certs/openldapCA.crt
+        volumes:
+          - /opt/openldap:/bitnami/openldap:Z
+        generate_systemd:
+          path: /etc/systemd/system/
+          restart_policy: always
+          time: 120
+          names: true
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+    - name: Restart the service
+      ansible.builtin.systemd:
+        name: container-ldap
+        state: restarted
+    - name: Build Nexus3 OCI Image
+      containers.podman.podman_image:
+        name: nexus
+        path: ../
+        build:
+          cache: false
+          force_rm: true
+          format: oci
+          extra_args: "-f Dockerfile.nexus3 --build-arg TAG_VERSION={{ lookup('env', 'TAG_VERSION') }}"
+          annotation:
+            app: nexus
+            function: artifactory for various artifacts
+            info: Provides artifactory storage and proxy of artifact repositories
+    - name: Adding some folders for binding
+      ansible.builtin.file:
+        path: "{{ nxspath }}"
+        state: directory
+        owner: 0200
+        group: 0200
+        mode: '0755'
+      loop:
+        - /opt/nexus
+        - /opt/nexus/etc
+        - /opt/nexus/etc/ssl
+      loop_control:
+        loop_var: nxspath
+    - name: Adding SSL Application Port
+      ansible.builtin.ini_file:
+        path: "/opt/nexus/etc/nexus.properties"
+        section:
+        no_extra_spaces: true
+        option: "{{ ssl_setting['name'] }}"
+        value: "{{ ssl_setting['value'] }}"
+        mode: '0644'
+      loop:
+        - name: application-port-ssl
+          value: 8443
+        - name: nexus-args
+          value: "${jetty.etc}/jetty.xml,${jetty.etc}/jetty-https.xml,${jetty.etc}/jetty-requestlog.xml"
+        - name: "ssl.etc"
+          value: "${karaf.data}/etc/ssl"
+      loop_control:
+        loop_var: ssl_setting
+    - name: Setup the VM options
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/templates/nexus.vmoptions.j2"
+        dest: /opt/nexus/nexus.vmoptions
+        mode: '0644'
+    - name: Create the sysconfig file
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/templates/sysconfig/nexus.j2"
+        dest: /etc/sysconfig/nexus
+        mode: '0644'
+    - name: Add cron script
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/files/updatecert"
+        dest: /etc/cron.daily/updatecert
+        mode: 0755
+    - name: Run the updatecert
+      ansible.builtin.command: /etc/cron.daily/updatecert
+      register: cmd
+      changed_when:
+        - "'Regenerating' in cmd.stdout"
+    - name: Set the permissions on the JKS
+      ansible.builtin.file:
+        path: /opt/nexus/etc/ssl/keystore.jks
+        owner: 200
+        group: 200
+    - name: Stop any existing Nexus3 service
+      ansible.builtin.systemd:
+        name: container-nexus
+        state: stopped
+      register: sysd
+      failed_when: "sysd.stdout | length < 1"
+    - name: Re-create nexus container with systemd service file generated
+      containers.podman.podman_container:
+        name: nexus
+        image: localhost/nexus
+        state: started
+        recreate: true
+        privileged: true
+        hostname: "{{ lookup('env', 'HOST_NAME') }}"
+        cap_add:
+          - ALL
+        stop_timeout: 3600
+        log_driver: journald
+        log_opt:
+          tag: nexus
+          max_size: 10mb
+        ports:
+          - "443:8443"
+          - "5443:5443"
+          - "5444:5444"
+          - "5445:5445"
+          - "5446:5446"
+          - "5447:5447"
+        expose:
+          - "8443"
+          - "5443"
+          - "5444"
+          - "5445"
+          - "5446"
+          - "5447"
+        env:
+          INSTALL4J_ADD_VM_PARAMS: >-
+            -Xms4096m -Xmx4096m
+            -XX:MaxDirectMemorySize=4096m
+            -Djava.util.prefs.userRoot=/nexus-data/javaprefs
+            -Djavax.net.ssl.keyStore=/nexus-data/etc/ssl/keystore.jks
+            -Djavax.net.ssl.keyStorePassword=password
+        volumes:
+          - /opt/nexus:/nexus-data:Z
+        generate_systemd:
+          path: /etc/systemd/system/
+          restart_policy: always
+          time: 120
+          names: true
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+    - name: Restart the service
+      ansible.builtin.systemd:
+        name: container-nexus
+        state: restarted

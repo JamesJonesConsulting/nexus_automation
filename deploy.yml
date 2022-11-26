@@ -18,7 +18,7 @@ variables:
   - group: openldap
 
 extends: 
-  template: .setup.yml
+  template: .podman.yml
   parameters:
     network: ${{ parameters.network }}
     version: 
