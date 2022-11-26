@@ -1,0 +1,78 @@
+- name: Stop any existing LDAP service
+  ansible.builtin.systemd:
+    name: container-ldap
+    state: stopped
+  register: sysd
+  ignore_errors: true
+- name: Build OpenLDAP OCI Image
+  containers.podman.podman_image:
+    name: ldap
+    path: "{{ container.path }}"
+    build:
+      cache: false
+      force_rm: true
+      format: oci
+      extra_args: "-f {{ container.dockerfile }} --build-arg TAG_VERSION={{ container.tag }}"
+      annotation:
+        app: openldap
+        function: Creates an LDAP server for managing accounts
+        info: Provides LDAP services to internal applications
+- name: Adding some folders for binding
+  ansible.builtin.file:
+    path: "{{ nxspath }}"
+    state: directory
+    owner: 1001
+    group: 1001
+    mode: '0755'
+  loop:
+    - /opt/openldap
+    - /opt/openldap/certs
+    - /opt/openldap/data
+  loop_control:
+    loop_var: nxspath
+- name: Re-create ldap container with systemd service file generated
+  containers.podman.podman_container:
+    name: ldap
+    image: localhost/ldap
+    state: started
+    recreate: true
+    privileged: true
+    hostname: "{{ container.hostname }}"
+    cap_add:
+      - ALL
+    stop_timeout: 3600
+    log_driver: journald
+    log_opt:
+      tag: ldap
+      max_size: 10mb
+    ports:
+      - "1389:1389"
+      - "1636:1636"
+    expose:
+      - "1389"
+      - "1636"
+    env:
+      LDAP_ADMIN_USERNAME: "{{ ldap.admin.username }}"
+      LDAP_ADMIN_PASSWORD: "{{ ldap.admin.password }}"
+      LDAP_USERS: "{{ ldap.users }}"
+      LDAP_PASSWORDS: "{{ ldap.passwords }}"
+      LDAP_ROOT: "{{ ldap.root }}"
+      LDAP_ENABLE_TLS: "{{ 'yes' if (ldap.tls.enabled | default(false)) else 'no' }}"
+      LDAP_TLS_CERT_FILE: /opt/bitnami/openldap/certs/openldap.crt
+      LDAP_TLS_KEY_FILE: /opt/bitnami/openldap/certs/openldap.key
+      LDAP_TLS_CA_FILE: /opt/bitnami/openldap/certs/openldapCA.crt
+    volumes:
+      - /opt/openldap/data:/bitnami/openldap:Z
+      - /opt/openldap/certs:/opt/bitnami/openldap/certs:Z
+    generate_systemd:
+      path: /etc/systemd/system/
+      restart_policy: always
+      time: 120
+      names: true
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
+- name: Restart the service
+  ansible.builtin.systemd:
+    name: container-ldap
+    state: restarted
