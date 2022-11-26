@@ -182,7 +182,7 @@
         name: container-nexus
         state: stopped
       register: sysd
-      failed_when: "sysd is not defined"
+      ignore_errors: true
     - name: Re-create nexus container with systemd service file generated
       containers.podman.podman_container:
         name: nexus
