@@ -26,7 +26,7 @@
     src: "{{ playbook_dir }}/files/openldap.xml"
     dest: /etc/firewalld/services/openldap.xml
     mode: '0644'
-- name: restart firewalld
+- name: Restart firewalld
   ansible.builtin.service:
     name: firewalld
     state: restarted
