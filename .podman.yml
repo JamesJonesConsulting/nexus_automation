@@ -36,9 +36,10 @@ parameters:
 jobs:
   - deployment: NexusPrePrep
     displayName: Preparing Nexus Host
-    environment: 
-      name: ${{ parameters.networks[parameters.network]['environment'] }}
-      resourceType: VirtualMachine
+    environment: ${{ parameters.networks[parameters.network]['environment'] }}
+    # environment: 
+    #   name: ${{ parameters.networks[parameters.network]['environment'] }}
+    #   resourceType: VirtualMachine
     pool: ${{ parameters.networks[parameters.network]['pool'] }}
     variables:
       DOCKER_BUILDKIT: 0
