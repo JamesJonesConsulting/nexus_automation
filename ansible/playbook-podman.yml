@@ -63,7 +63,7 @@
         name: container-nexus
         state: stopped
       register: sysd
-      failed_when: "sysd.stdout | length < 1"
+      ignore_errors: true
     - name: Re-create ldap container with systemd service file generated
       containers.podman.podman_container:
         name: ldap
