@@ -33,6 +33,12 @@
         - Dockerfile.openldap
       loop_control:
         loop_var: dkrfile
+    - name: Stop any existing LDAP service
+      ansible.builtin.systemd:
+        name: container-ldap
+        state: stopped
+      register: sysd
+      ignore_errors: true
     - name: Build OpenLDAP OCI Image
       containers.podman.podman_image:
         name: ldap
@@ -58,12 +64,6 @@
         - /opt/openldap/certs
       loop_control:
         loop_var: nxspath
-    - name: Stop any existing Nexus3 service
-      ansible.builtin.systemd:
-        name: container-nexus
-        state: stopped
-      register: sysd
-      ignore_errors: true
     - name: Re-create ldap container with systemd service file generated
       containers.podman.podman_container:
         name: ldap
@@ -109,6 +109,12 @@
       ansible.builtin.systemd:
         name: container-ldap
         state: restarted
+    - name: Stop any existing LDAP service
+      ansible.builtin.systemd:
+        name: container-nexus
+        state: stopped
+      register: sysd
+      ignore_errors: true
     - name: Build Nexus3 OCI Image
       containers.podman.podman_image:
         name: nexus
@@ -177,12 +183,6 @@
         path: /opt/nexus/etc/ssl/keystore.jks
         owner: 200
         group: 200
-    - name: Stop any existing Nexus3 service
-      ansible.builtin.systemd:
-        name: container-nexus
-        state: stopped
-      register: sysd
-      ignore_errors: true
     - name: Re-create nexus container with systemd service file generated
       containers.podman.podman_container:
         name: nexus
