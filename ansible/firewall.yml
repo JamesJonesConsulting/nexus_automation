@@ -27,7 +27,7 @@
     dest: /etc/firewalld/services/openldap.xml
     mode: '0644'
 - name: restart firewalld
-  service:
+  ansible.builtin.service:
     name: firewalld
     state: restarted
 - name: Enable services on the VM Host
