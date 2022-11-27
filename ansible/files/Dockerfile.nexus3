@@ -18,7 +18,7 @@ RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-communi
   && mvn clean install -DskipTests \
   && mkdir plugins \
   && cp -r ~/.m2/repository/org/sonatype/nexus/plugins/nexus-repository-cpan/. plugins \
-  && find ./plugins -name "*.pom" -o -name '*.xml' -o -name '*sources.jar' -o -name '_remote.repositories' -type f -delete
+  && cd plugins; find . -name "*.pom" -o -name '*.xml' -o -name '*sources.jar' -o -name '_remote.repositories' -type f | xargs rm
 
 FROM base AS final
 
