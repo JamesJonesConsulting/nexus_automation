@@ -1,4 +1,4 @@
-- name: Stop any existing LDAP service
+- name: Stop any existing Nexus service
   ansible.builtin.systemd:
     name: container-nexus
     state: stopped
