@@ -3,7 +3,7 @@ FROM docker.io/sonatype/nexus3:${TAG_VERSION}
 
 USER root 
 
-RUN microdnf install -y libxslt
+RUN microdnf install -y libxslt jq
 
 USER nexus
 
