@@ -15,7 +15,8 @@ RUN apt-get update && apt-get install -y jq
 
 RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-community/nexus-repository-cpan/tags" | jq '.[] | .name' -r | grep cpan-parent- | sort | head -n 1) \
   && git clone --branch "$TAG_VER" https://github.com/sonatype-nexus-community/nexus-repository-cpan.git . \
-  && mvn clean install -DskipTests
+  && mvn clean install -DskipTests \
+  && cp -r ~/.m2/repository/org/sonatype/nexus/plugins target
 
 FROM base AS final
 
