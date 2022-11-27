@@ -10,7 +10,7 @@ parameters:
     type: string
     default: latest
   - name: openldap_version
-    displayName: Nexus Version
+    displayName: OpenLDAP Version
     type: string
     default: latest
 trigger: none
