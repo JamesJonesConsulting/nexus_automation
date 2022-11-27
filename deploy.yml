@@ -5,13 +5,14 @@ parameters:
     values:
       - sgan
       - ymd
-  - name: version
+  - name: nexus_version
     displayName: Nexus Version
     type: string
-    default: 3.42.0
-    values:
-      - 3.42.0
-      - 3.40.1
+    default: latest
+  - name: openldap_version
+    displayName: Nexus Version
+    type: string
+    default: latest
 trigger: none
 variables:
   - group: ansible
@@ -22,8 +23,8 @@ extends:
   parameters:
     network: ${{ parameters.network }}
     version: 
-      openldap: latest
-      nexus3: ${{ parameters.version }}
+      openldap: ${{ parameters.openldap_version }}
+      nexus3: ${{ parameters.nexus_version }}
     ${{ if in(parameters.network,'sgan')}}:
       vault: $(YMD_ANSIBLE_VAULT_KEY)
       ldap:
