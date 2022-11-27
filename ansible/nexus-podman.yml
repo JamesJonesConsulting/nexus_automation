@@ -7,6 +7,7 @@
 - name: Build Nexus3 OCI Image
   containers.podman.podman_image:
     name: nexus
+    force: true
     path: "{{ container.path }}"
     build:
       cache: false
