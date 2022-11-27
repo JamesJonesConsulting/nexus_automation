@@ -12,7 +12,9 @@
       cache: false
       force_rm: true
       format: oci
-      extra_args: "-f {{ container.dockerfile }} --build-arg TAG_VERSION={{ container.tag }}"
+      extra_args: >-
+        -f {{ container.dockerfile }}
+        --build-arg TAG_VERSION={{ container.tag }}
       annotation:
         app: nexus
         function: artifactory for various artifacts
@@ -79,7 +81,7 @@
     state: started
     recreate: true
     privileged: true
-    hostname: "{{ lookup('env', 'HOST_NAME') }}"
+    hostname: "{{ container.hostname }}"
     cap_add:
       - ALL
     stop_timeout: 3600
