@@ -1,9 +1,23 @@
 ARG TAG_VERSION
-FROM docker.io/sonatype/nexus3:${TAG_VERSION}
+FROM docker.io/sonatype/nexus3:${TAG_VERSION} AS base
 
-USER root 
+USER root
 
-RUN microdnf install -y libxslt jq
+RUN microdnf install -y libxslt jq git
 
 USER nexus
 
+FROM docker.io/maven:3.8.6-openjdk-8 AS plugins
+
+WORKDIR /work
+
+RUN apt-get update && apt-get install -y jq
+
+RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-community/nexus-repository-cpan/tags" | jq '.[] | .name' -r | grep cpan-parent- | sort | head -n 1) \
+  && git clone --branch "$TAG_VER" https://github.com/sonatype-nexus-community/nexus-repository-cpan.git . \
+  && mvn clean install -DskipTests
+
+FROM base AS final
+
+
+COPY --from=plugins --chown=root:root /work/target /opt/sonatype
