@@ -12,7 +12,9 @@
       cache: false
       force_rm: true
       format: oci
-      extra_args: "-f {{ container.dockerfile }} --build-arg TAG_VERSION={{ container.tag }}"
+      extra_args: >-
+        -f {{ container.dockerfile }}
+        --build-arg TAG_VERSION={{ container.tag }}
       annotation:
         app: openldap
         function: Creates an LDAP server for managing accounts
