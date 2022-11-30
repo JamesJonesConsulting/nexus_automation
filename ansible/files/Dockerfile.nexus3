@@ -35,7 +35,6 @@ RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-communi
 
 FROM base AS final
 
-
 COPY --from=cpan-plugins --chown=root:root /work/plugins/. /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-cpan/
 COPY --from=composer-plugins --chown=root:root /work/plugins/. /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-composer/
 COPY enablenexusplugins.py /tmp
