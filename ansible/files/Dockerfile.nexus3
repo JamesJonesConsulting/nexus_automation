@@ -7,7 +7,7 @@ RUN microdnf install -y libxml2 libxslt jq git python3
 
 USER nexus
 
-FROM docker.io/maven:3.8.6-openjdk-8 AS plugins
+FROM docker.io/maven:3.8.6-openjdk-8 AS cpan-plugins
 
 WORKDIR /work
 
@@ -20,10 +20,24 @@ RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-communi
   && cp -r ~/.m2/repository/org/sonatype/nexus/plugins/nexus-repository-cpan/. plugins \
   && cd plugins; find . -name "*.pom" -o -name '*.xml' -o -name '*sources.jar' -o -name '_remote.repositories' -type f | xargs rm
 
+FROM docker.io/maven:3.8.6-openjdk-8 AS composer-plugins
+
+WORKDIR /work
+
+RUN apt-get update && apt-get install -y jq
+
+RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-community/nexus-repository-composer/tags" | jq '.[] | .name' -r | grep composer-parent- | sort | head -n 1) \
+  && git clone --branch "$TAG_VER" https://github.com/sonatype-nexus-community/nexus-repository-composer.git . \
+  && mvn clean install -DskipTests \
+  && mkdir plugins \
+  && cp -r ~/.m2/repository/org/sonatype/nexus/plugins/nexus-repository-composer/. plugins \
+  && cd plugins; find . -name "*.pom" -o -name '*.xml' -o -name '*sources.jar' -o -name '_remote.repositories' -type f | xargs rm
+
 FROM base AS final
 
 
-COPY --from=plugins --chown=root:root /work/plugins/. /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-cpan/
+COPY --from=cpan-plugins --chown=root:root /work/plugins/. /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-cpan/
+COPY --from=composer-plugins --chown=root:root /work/plugins/. /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-composer/
 COPY enablenexusplugins.py /tmp
 
 USER root
