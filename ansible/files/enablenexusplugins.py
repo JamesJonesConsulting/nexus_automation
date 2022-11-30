@@ -24,10 +24,27 @@ for path, subdirs, files in os.walk(cpan_plugin_root):
 		cpan_version = subdirs[0]
 		print(cpan_version)
 
+composer_feature = ET.SubElement(core_feature, "{%s}feature" % (namespace,), attrib={
+	"prerequisite": "false",
+	"dependency": "false"
+})
+composer_feature.text = "nexus-repository-composer"
+composer_plugin_root = argv[3]
+for path, subdirs, files in os.walk(composer_plugin_root):
+	if len(subdirs) > 0:
+		composer_version = subdirs[0]
+		print(composer_version)
+
 cpan_full_feature = ET.SubElement(root, "{%s}feature" % (namespace,), attrib={
 	"name": "nexus-repository-cpan",
 	"description": "org.sonatype.nexus.plugins:nexus-repository-cpan",
 	"version": "%s" % cpan_version
+})
+
+composer_full_feature = ET.SubElement(root, "{%s}feature" % (namespace,), attrib={
+	"name": "nexus-repository-compose",
+	"description": "org.sonatype.nexus.plugins:nexus-repository-composer",
+	"version": "%s" % composer_version
 })
 
 cpan_details = ET.SubElement(cpan_full_feature, "{%s}details" % (namespace,))
@@ -35,6 +52,10 @@ cpan_details.text = "org.sonatype.nexus.plugins:nexus-repository-cpan"
 cpan_bundles = ET.SubElement(cpan_full_feature, "{%s}bundle" % (namespace,))
 cpan_bundles.text = "mvn:org.sonatype.nexus.plugins/nexus-repository-cpan/%s" % (cpan_version,)
 
+composer_details = ET.SubElement(composer_full_feature, "{%s}details" % (namespace,))
+composer_details.text = "org.sonatype.nexus.plugins:nexus-repository-composer"
+composer_bundles = ET.SubElement(composer_full_feature, "{%s}bundle" % (namespace,))
+composer_bundles.text = "mvn:org.sonatype.nexus.plugins/nexus-repository-composer/%s" % (composer_version,)
 
 # ET.indent(tree, space="\t", level=0)
 tree.write(xmlfile, encoding="UTF-8", xml_declaration=True)

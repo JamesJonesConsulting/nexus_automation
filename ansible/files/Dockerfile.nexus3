@@ -42,7 +42,7 @@ COPY enablenexusplugins.py /tmp
 USER root
 
 RUN NEXUS_CORE_FEATURES_XML=$(find . -name 'nexus-core-feature-*-features.xml' -type f) \
-  && exec python3 /tmp/enablenexusplugins.py $NEXUS_CORE_FEATURES_XML /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-cpan/ /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-cpan/ \
+  && exec python3 /tmp/enablenexusplugins.py $NEXUS_CORE_FEATURES_XML /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-cpan/ /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-composer/ \
   && xmllint --format "$NEXUS_CORE_FEATURES_XML" > "$NEXUS_CORE_FEATURES_XML"
 
 USER nexus
