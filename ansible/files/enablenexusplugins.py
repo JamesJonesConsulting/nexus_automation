@@ -42,7 +42,7 @@ cpan_full_feature = ET.SubElement(root, "{%s}feature" % (namespace,), attrib={
 })
 
 composer_full_feature = ET.SubElement(root, "{%s}feature" % (namespace,), attrib={
-	"name": "nexus-repository-compose",
+	"name": "nexus-repository-composer",
 	"description": "org.sonatype.nexus.plugins:nexus-repository-composer",
 	"version": "%s" % composer_version
 })
