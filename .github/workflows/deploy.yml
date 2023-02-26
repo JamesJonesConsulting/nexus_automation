@@ -22,7 +22,7 @@ env:
 
 jobs:
   prepare:
-    runs-on: [ self-hosted, big, build ]
+    runs-on: [ self-hosted, medium, build ]
     container:
       image: nexus.jamesjonesconsulting.com:5443/jamesjonesconsulting/podman-dind-like:latest
       options: --userns=keep-id --group-add keep-groups --privileged --user root --security-opt seccomp=unconfined
