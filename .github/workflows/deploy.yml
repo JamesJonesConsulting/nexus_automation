@@ -60,5 +60,4 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
           ANSIBLE_TIMEOUT: 120
-          # LETSENCRYPT_HOST: /etc/letsencrypt/live/${{ parameters.networks[parameters.network].letsencrypt_host }}
 
