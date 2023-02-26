@@ -1,0 +1,80 @@
+parameters:
+  - name: network
+    type: string
+  - name: version
+    type: object
+  - name: vault
+    type: string
+  - name: ldap
+    type: object
+  - name: networks
+    type: object
+    default:
+      ymd:
+        group: nexus
+        agent_key: sgan_agent_key
+        host_key: ymd_agent_key
+        host_user: jamjon3
+        hostname: registry.apps.yourmessagedelivered.com
+        letsencrypt_host: apps.yourmessagedelivered.com
+        pool: YMDAgents
+        environment: ymdregistry
+        registry: dh_registry
+        docker_host: unix:///run/podman/podman.sock
+      sgan:
+        group: nexus
+        agent_key: sgan_agent_key
+        host_key: sgan_agent_key
+        host_user: jam
+        hostname: nexus.jamjon3.sites.net
+        letsencrypt_host: jamjon3.sites.net
+        pool: PodmanAgents
+        environment: nexus
+        registry: dh_registry
+        docker_host: unix:///run/podman/podman.sock
+
+jobs:
+  - deployment: NexusPrePrep
+    displayName: Preparing Nexus Host
+    environment: ${{ parameters.networks[parameters.network]['environment'] }}
+    # environment: 
+    #   name: ${{ parameters.networks[parameters.network]['environment'] }}
+    #   resourceType: VirtualMachine
+    pool: ${{ parameters.networks[parameters.network]['pool'] }}
+    variables:
+      DOCKER_BUILDKIT: 0
+      DOCKER_HOST: ${{ parameters.networks[parameters.network]['docker_host'] }}
+    strategy:
+      runOnce:
+        deploy:  
+          steps:
+            - checkout: self
+            - task: DownloadSecureFile@1
+              name: agentKey # The name with which to reference the secure file's path on the agent, like $(mySecureFile.secureFilePath)
+              inputs:
+                secureFile: ${{ parameters.networks[parameters.network]['agent_key'] }}
+            - task: DownloadSecureFile@1
+              name: hostKey # The name with which to reference the secure file's path on the agent, like $(mySecureFile.secureFilePath)
+              inputs:
+                secureFile: ${{ parameters.networks[parameters.network]['host_key'] }}
+            - bash: |
+                eval $(ssh-agent -s); cat $(agentKey.secureFilePath) | ssh-add -; echo "${{ parameters.vault }}" > $(Agent.TempDirectory)/.keyvault
+                ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
+                ansible-galaxy collection install -r ansible/requirements.yml
+                ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault --key-file=$(hostKey.secureFilePath) -i ansible/roles/inventory/${{ parameters.network }} -u ${{ parameters.networks[parameters.network].host_user }} ansible/playbook.yml -e 'inventory_group_name=${{ parameters.networks[parameters.network].group }} inventory=${{ parameters.network }} certpath=${{ parameters.networks[parameters.network].certpath }}' -vvv
+              # workingDirectory: $(Build.Repository.Name)         certbot_domain: '*.jamjon3.sytes.net'
+              displayName: Connect to Nexus hosts and setup pre-requirements
+              env:
+                ANSIBLE_HOST_KEY_CHECKING: False
+                ANSIBLE_TIMEOUT: 30
+                LETSENCRYPT_HOST_CERT_PATH: /etc/letsencrypt/live/${{ parameters.networks[parameters.network].letsencrypt_host }}
+                TAG_VERSION: ${{ parameters.version.nexus3 }}
+                OPENLDAP_TAG_VERSION: ${{ parameters.version.openldap }}
+                HOST_NAME: ${{ parameters.networks[parameters.network]['hostname'] }}
+                LETSENCRYPT_HOST: ${{ parameters.networks[parameters.network].letsencrypt_host }}
+                LDAP_ROOT: ${{ parameters.networks[parameters.ldap]['root'] }}
+                LDAP_USER: ${{ parameters.networks[parameters.ldap]['user'] }}
+                LDAP_PASSWORD: ${{ parameters.networks[parameters.ldap]['password'] }}
+                LDAP_ADMIN_USER: ${{ parameters.networks[parameters.ldap]['admin']['user'] }}
+                LDAP_ADMIN_PASSWORD: ${{ parameters.networks[parameters.ldap]['admin']['password'] }}
+

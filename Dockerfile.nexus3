@@ -1,3 +1,0 @@
-ARG TAG_VERSION
-FROM docker.io/sonatype/nexus3:${TAG_VERSION}
-

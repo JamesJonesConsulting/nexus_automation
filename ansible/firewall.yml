@@ -1,37 +1,43 @@
 ---
 - name: Allow SELinux port access (nexus)
-  seport:
+  community.general.seport:
     ports: 443, 5443, 5444, 5445, 5446, 5447
     proto: tcp
     setype: http_port_t
     state: present
 - name: Allow SELinux port access (openldap)
-  seport:
+  community.general.seport:
     ports: 1389, 1636
     proto: tcp
     setype: http_port_t
     state: present
 - name: Set http_can_network_connect flag on and keep it persistent across reboots
-  seboolean:
+  ansible.posix.seboolean:
     name: httpd_can_network_connect
-    state: yes
-    persistent: yes
+    state: true
+    persistent: true
 - name: Add Docker Repo Firewalld service (RHEL)
-  template:
+  ansible.builtin.template:
     src: "{{ playbook_dir }}/files/docker-registry-ssl.xml"
     dest: /etc/firewalld/services/docker-registry-ssl.xml
+    mode: '0644'
 - name: Add Docker Repo Firewalld service (RHEL)
-  template:
+  ansible.builtin.template:
     src: "{{ playbook_dir }}/files/openldap.xml"
     dest: /etc/firewalld/services/openldap.xml
-- name: restart firewalld
-  service:
+    mode: '0644'
+- name: Stop firewalld
+  ansible.builtin.service:
     name: firewalld
-    state: restarted
+    state: stopped
+- name: Start firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: started
 - name: Enable services on the VM Host
   ansible.posix.firewalld:
     service: "{{ srv_name }}"
-    permanent: yes
+    permanent: true
     state: enabled
   loop:
     - https
@@ -39,7 +45,11 @@
     - openldap
   loop_control:
     loop_var: srv_name
-- name: restart firewalld
-  service:
+- name: Stop firewalld
+  ansible.builtin.service:
     name: firewalld
-    state: restarted
+    state: stopped
+- name: Start firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: started
