@@ -59,6 +59,6 @@ jobs:
           # ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault --key-file=$(hostKey.secureFilePath) -i ansible/roles/inventory/${{ parameters.network }} -u ${{ parameters.networks[parameters.network].host_user }} ansible/playbook-pre.yml -e 'inventory_group_name=${{ parameters.networks[parameters.network].group }} inventory=${{ parameters.network }} certpath=${{ parameters.networks[parameters.network].certpath }}' -vvv
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
-          ANSIBLE_TIMEOUT: 30
-          LETSENCRYPT_HOST: /etc/letsencrypt/live/${{ parameters.networks[parameters.network].letsencrypt_host }}
+          ANSIBLE_TIMEOUT: 120
+          # LETSENCRYPT_HOST: /etc/letsencrypt/live/${{ parameters.networks[parameters.network].letsencrypt_host }}
 
