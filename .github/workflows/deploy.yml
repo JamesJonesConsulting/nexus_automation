@@ -7,12 +7,18 @@ on:
         type: string
         description: Enter the Nexus tag for deployment
         default: latest
-      agent-label:
+      deploy-inventory:
         required: true
         type: choice
         description: Enter the Nexus tag for deployment
         options: 
-          - artifactory
+          - home
+      deploy-group:
+        required: true
+        type: choice
+        description: Enter the Nexus tag for deployment
+        options: 
+          - nexus
       # build_id:
       #   required: true
       #   type: number
@@ -29,7 +35,7 @@ env:
 jobs:
   prepare:
     name: Prepare the host for Nexus
-    runs-on: [ self-hosted, '${{ inputs.agent-label }}' ]
+    runs-on: [ self-hosted, medium, build ]
     container:
       image: nexus.jamesjonesconsulting.com:5443/jamesjonesconsulting/podman-dind-like:latest
       options: --userns=keep-id --group-add keep-groups --privileged --user root --security-opt seccomp=unconfined
@@ -42,9 +48,13 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
-      - name: Docker Login
-        uses: azure/docker-login@v1
+      - name: Add the key
+        uses: JamesJonesConsulting/github.ssh-add-b64.action@main
         with:
-          login-server: ${{ env.NEXUS_REGISTRY }}
-          username: ${{ secrets.HOME_NEXUS_DOCKER_USER }}
-          password: ${{ secrets.HOME_NEXUS_DOCKER_PASSWORD }}
+          encoded-key: ${{ secrets.HOME_SSH_PRIVATE_KEY }}
+
+      
+      # - name: Check matrix definition
+      #   run: |
+      #     matrix='${{ needs.matrix.outputs.matrix }}'
+      #     echo $matrix
