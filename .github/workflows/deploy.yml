@@ -1,0 +1,37 @@
+name: Deploy Nexus
+on:
+  workflow_call:
+    inputs:
+      deploy_tag:
+        required: true
+        type: string
+        description: Enter the Nexus tag for deployment
+        default: latest
+      # build_id:
+      #   required: true
+      #   type: number
+      # deploy_target:
+      #   required: true
+      #   type: string
+      # perform_deploy:
+      #   required: true
+      #   type: boolean
+
+env:
+  NEXUS_DOCKER_USER: ${{ secrets.HOME_NEXUS_DOCKER_USER }}
+
+jobs:
+  prepare:
+    runs-on: [ self-hosted, big, build ]
+    container:
+      image: nexus.jamesjonesconsulting.com:5443/jamesjonesconsulting/podman-dind-like:latest
+      options: --userns=keep-id --group-add keep-groups --privileged --user root --security-opt seccomp=unconfined
+      credentials:
+        username: ${{ secrets.HOME_NEXUS_DOCKER_USER }}
+        password: ${{ secrets.HOME_NEXUS_DOCKER_PASSWORD }}
+    steps:
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
