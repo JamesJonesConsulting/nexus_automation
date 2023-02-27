@@ -31,6 +31,13 @@ on:
 
 env:
   NEXUS_DOCKER_USER: ${{ secrets.HOME_NEXUS_DOCKER_USER }}
+  CONFIG_MAP: |
+    home:
+      vault: HOME_ANSIBLE_VAULT_KEY
+      private: HOME_SSH_PRIVATE_KEY
+      group: nexus
+      user: jam
+      network: sgan
 
 jobs:
   prepare:
@@ -42,6 +49,12 @@ jobs:
       credentials:
         username: ${{ secrets.HOME_NEXUS_DOCKER_USER }}
         password: ${{ secrets.HOME_NEXUS_DOCKER_PASSWORD }}
+    outputs:
+      user: ${{ steps.set-ansible-config.outputs.user }}
+      group: ${{ steps.set-ansible-config.outputs.group }}
+      vault: ${{ steps.set-ansible-config.outputs.vault }}
+      private: ${{ steps.set-ansible-config.outputs.private }}
+      network: ${{ steps.set-ansible-config.outputs.network }}
     steps:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
@@ -52,11 +65,20 @@ jobs:
         uses: JamesJonesConsulting/github.ssh-add-b64.action@main
         with:
           encoded-key: ${{ secrets.HOME_SSH_PRIVATE_KEY }}
+      - name: Get Ansible Config
+        id: set-ansible-config
+        run: |
+          echo "user=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.user' -r)" >> $GITHUB_OUTPUT
+          echo "group=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.group' -r)" >> $GITHUB_OUTPUT
+          echo "vault=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.vault' -r)" >> $GITHUB_OUTPUT
+          echo "private=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.private' -r)" >> $GITHUB_OUTPUT
+          echo "network=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.network' -r)" >> $GITHUB_OUTPUT
       - name: Connect to Nexus hosts and setup pre-requirements
         run: |
           ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
           ansible-galaxy collection install -r ansible/requirements.yml
-          # ansible-playbook --vault-password-file=$(Agent.TempDirectory)/.keyvault --key-file=$(hostKey.secureFilePath) -i ansible/roles/inventory/${{ parameters.network }} -u ${{ parameters.networks[parameters.network].host_user }} ansible/playbook-pre.yml -e 'inventory_group_name=${{ parameters.networks[parameters.network].group }} inventory=${{ parameters.network }} certpath=${{ parameters.networks[parameters.network].certpath }}' -vvv
+          echo "${{ secrets[steps.set-ansible-config.outputs.vault] }}" > ${RUNNER_TEMP}/.keyvault
+          # ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/roles/inventory/${{ inputs.deploy-inventory }}/hosts -u ${{ steps.set-ansible-config.outputs.user }} ansible/playbook-pre.yml -e 'inventory_group_name=${{ steps.set-ansible-config.outputs.group }} inventory=${{ inputs.deploy-inventory }} certpath=${{ steps.set-ansible-config.outputs.group }}' -vvv
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
           ANSIBLE_TIMEOUT: 120
