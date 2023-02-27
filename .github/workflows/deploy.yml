@@ -65,7 +65,7 @@ jobs:
       - name: Get Ansible Config
         id: set-ansible-config
         run: |
-          echo "ansible_config=$(echo -n '${{ env.CONFIG_MAP}}' | yq -r -o=json - | jq . -c)" >> $GITHUB_OUTPUT
+          echo "ansible_config=$(echo -n '${{ env.CONFIG_MAP}}' | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}' -c)" >> $GITHUB_OUTPUT
           echo "user=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.user' -r)" >> $GITHUB_OUTPUT
           echo "group=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.group' -r)" >> $GITHUB_OUTPUT
           echo "vault=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.vault' -r)" >> $GITHUB_OUTPUT
