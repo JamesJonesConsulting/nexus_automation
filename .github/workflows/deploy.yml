@@ -73,7 +73,7 @@ jobs:
           echo "network=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.network' -r)" >> $GITHUB_OUTPUT
       - name: Test
         run: |
-          echo '${{ fromJson(steps.set-ansible-config.outputs.ansible_config).private }}'
+          echo '${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).private] }}' | base64 -d
       - name: Add the key
         uses: JamesJonesConsulting/github.ssh-add-b64.action@main
         with:
