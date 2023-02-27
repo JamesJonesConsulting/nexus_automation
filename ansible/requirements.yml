@@ -1,5 +1,5 @@
 roles:
-- src: git@github.com:GulfCoastGreens/inventory.git
+- src: git@github.com:JamesJonesConsulting/AnsibleInventory.git
   version: master
   scm: git
   name: inventory

@@ -50,6 +50,7 @@ jobs:
         username: ${{ secrets.HOME_NEXUS_DOCKER_USER }}
         password: ${{ secrets.HOME_NEXUS_DOCKER_PASSWORD }}
     outputs:
+      ansible_config: ${{ steps.set-ansible-config.outputs.ansible_config }}
       user: ${{ steps.set-ansible-config.outputs.user }}
       group: ${{ steps.set-ansible-config.outputs.group }}
       vault: ${{ steps.set-ansible-config.outputs.vault }}
@@ -68,6 +69,7 @@ jobs:
       - name: Get Ansible Config
         id: set-ansible-config
         run: |
+          echo "ansible_config=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq . -c)" >> $GITHUB_OUTPUT
           echo "user=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.user' -r)" >> $GITHUB_OUTPUT
           echo "group=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.group' -r)" >> $GITHUB_OUTPUT
           echo "vault=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.vault' -r)" >> $GITHUB_OUTPUT
@@ -75,7 +77,9 @@ jobs:
           echo "network=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.network' -r)" >> $GITHUB_OUTPUT
       - name: Connect to Nexus hosts and setup pre-requirements
         run: |
-          ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
+          git clone -b main --single-branch git@github.com:JamesJonesConsulting/AnsibleInventory.git ansible/inventory
+          git clone -b main --single-branch git@github.com:JamesJonesConsulting/AnsibleVault.git ansible/vault
+          # ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
           ansible-galaxy collection install -r ansible/requirements.yml
           echo "${{ secrets[steps.set-ansible-config.outputs.vault] }}" > ${RUNNER_TEMP}/.keyvault
           # ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/roles/inventory/${{ inputs.deploy-inventory }}/hosts -u ${{ steps.set-ansible-config.outputs.user }} ansible/playbook-pre.yml -e 'inventory_group_name=${{ steps.set-ansible-config.outputs.group }} inventory=${{ inputs.deploy-inventory }} certpath=${{ steps.set-ansible-config.outputs.group }}' -vvv
