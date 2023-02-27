@@ -51,11 +51,11 @@ jobs:
         password: ${{ secrets.HOME_NEXUS_DOCKER_PASSWORD }}
     outputs:
       ansible_config: ${{ steps.set-ansible-config.outputs.ansible_config }}
-      user: ${{ steps.set-ansible-config.outputs.user }}
-      group: ${{ steps.set-ansible-config.outputs.group }}
-      vault: ${{ steps.set-ansible-config.outputs.vault }}
-      private: ${{ steps.set-ansible-config.outputs.private }}
-      network: ${{ steps.set-ansible-config.outputs.network }}
+      # user: ${{ steps.set-ansible-config.outputs.user }}
+      # group: ${{ steps.set-ansible-config.outputs.group }}
+      # vault: ${{ steps.set-ansible-config.outputs.vault }}
+      # private: ${{ steps.set-ansible-config.outputs.private }}
+      # network: ${{ steps.set-ansible-config.outputs.network }}
     steps:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
@@ -66,14 +66,11 @@ jobs:
         id: set-ansible-config
         run: |
           echo "ansible_config=$(echo -n '${{ env.CONFIG_MAP}}' | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}' -c)" >> $GITHUB_OUTPUT
-          echo "user=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.user' -r)" >> $GITHUB_OUTPUT
-          echo "group=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.group' -r)" >> $GITHUB_OUTPUT
-          echo "vault=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.vault' -r)" >> $GITHUB_OUTPUT
-          echo "private=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.private' -r)" >> $GITHUB_OUTPUT
-          echo "network=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.network' -r)" >> $GITHUB_OUTPUT
-      - name: Test
-        run: |
-          echo '${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).private] }}' | base64 -d
+          # echo "user=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.user' -r)" >> $GITHUB_OUTPUT
+          # echo "group=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.group' -r)" >> $GITHUB_OUTPUT
+          # echo "vault=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.vault' -r)" >> $GITHUB_OUTPUT
+          # echo "private=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.private' -r)" >> $GITHUB_OUTPUT
+          # echo "network=$(echo -n "${{ env.CONFIG_MAP}}" | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}.network' -r)" >> $GITHUB_OUTPUT
       - name: Add the key
         uses: JamesJonesConsulting/github.ssh-add-b64.action@main
         with:
@@ -81,13 +78,14 @@ jobs:
           # encoded-key: ${{ secrets.HOME_SSH_PRIVATE_KEY }}
       - name: Connect to Nexus hosts and setup pre-requirements
         run: |
+          eval $(ssh-agent); ssh-add <(echo -n '${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).private] }}' | base64 -d);
           mkdir -p ~/.ssh; chmod 700 ~/.ssh; echo 'Host *\n  PubkeyAcceptedKeyTypes +ssh-rsa\n  HostKeyAlgorithms +ssh-rsa\n'> ~/.ssh/config; chmod 600 ~/.ssh/config
           git clone -b main --single-branch git@github.com:JamesJonesConsulting/AnsibleInventory.git ansible/inventory
           git clone -b main --single-branch git@github.com:JamesJonesConsulting/AnsibleVault.git ansible/vault
           # ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
           ansible-galaxy collection install -r ansible/requirements.yml
-          echo "${{ secrets[steps.set-ansible-config.outputs.vault] }}" > ${RUNNER_TEMP}/.keyvault
-          # ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/roles/inventory/${{ inputs.deploy-inventory }}/hosts -u ${{ steps.set-ansible-config.outputs.user }} ansible/playbook-pre.yml -e 'inventory_group_name=${{ steps.set-ansible-config.outputs.group }} inventory=${{ inputs.deploy-inventory }} certpath=${{ steps.set-ansible-config.outputs.group }}' -vvv
+          echo "${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).vault] }}" > ${RUNNER_TEMP}/.keyvault
+          # ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/roles/inventory/${{ inputs.deploy-inventory }}/hosts -u ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).user }} ansible/playbook-pre.yml -e 'inventory_group_name=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }} inventory=${{ inputs.deploy-inventory }} certpath=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }}' -vvv
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
           ANSIBLE_TIMEOUT: 120
