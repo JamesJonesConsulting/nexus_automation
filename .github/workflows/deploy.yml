@@ -70,8 +70,8 @@ jobs:
           eval $(ssh-agent); ssh-add <(echo -n '${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).private] }}' | base64 -d);
           git clone -b main --single-branch git@github.com:JamesJonesConsulting/AnsibleInventory.git ansible/inventory
           git clone -b main --single-branch git@github.com:JamesJonesConsulting/AnsibleVault.git ansible/vault
-          # ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
-          ansible-galaxy collection install -r ansible/requirements.yml
+          # ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles -f
+          ansible-galaxy collection install -r ansible/requirements.yml -f
           echo "${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).vault] }}" > ${RUNNER_TEMP}/.keyvault
           # ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/roles/inventory/${{ inputs.deploy-inventory }}/hosts -u ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).user }} ansible/playbook-pre.yml -e 'inventory_group_name=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }} inventory=${{ inputs.deploy-inventory }} certpath=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }}' -vvv
         env:
