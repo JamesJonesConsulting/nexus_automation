@@ -81,6 +81,7 @@ jobs:
           # encoded-key: ${{ secrets.HOME_SSH_PRIVATE_KEY }}
       - name: Connect to Nexus hosts and setup pre-requirements
         run: |
+          mkdir -p ~/.ssh; chmod 700 ~/.ssh; echo 'Host *\n  PubkeyAcceptedKeyTypes +ssh-rsa\n  HostKeyAlgorithms +ssh-rsa\n'> ~/.ssh/config; chmod 600 ~/.ssh/config
           git clone -b main --single-branch git@github.com:JamesJonesConsulting/AnsibleInventory.git ansible/inventory
           git clone -b main --single-branch git@github.com:JamesJonesConsulting/AnsibleVault.git ansible/vault
           # ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
