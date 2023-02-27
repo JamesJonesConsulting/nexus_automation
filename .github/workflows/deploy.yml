@@ -61,15 +61,13 @@ jobs:
         id: set-ansible-config
         run: |
           echo "ansible_config=$(echo -n '${{ env.CONFIG_MAP}}' | yq -r -o=json - | jq '.${{ inputs.deploy-inventory }}' -c)" >> $GITHUB_OUTPUT
-      - name: Add the key
-        uses: JamesJonesConsulting/github.ssh-add-b64.action@main
-        with:
-          encoded-key: ${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).private] }}
-          # encoded-key: ${{ secrets.HOME_SSH_PRIVATE_KEY }}
+      # - name: Add the key
+      #   uses: JamesJonesConsulting/github.ssh-add-b64.action@main
+      #   with:
+      #     encoded-key: ${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).private] }}
       - name: Connect to Nexus hosts and setup pre-requirements
         run: |
           eval $(ssh-agent); ssh-add <(echo -n '${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).private] }}' | base64 -d);
-          mkdir -p ~/.ssh; chmod 700 ~/.ssh; echo 'Host *\n  PubkeyAcceptedKeyTypes +ssh-rsa\n  HostKeyAlgorithms +ssh-rsa\n'> ~/.ssh/config; chmod 600 ~/.ssh/config
           git clone -b main --single-branch git@github.com:JamesJonesConsulting/AnsibleInventory.git ansible/inventory
           git clone -b main --single-branch git@github.com:JamesJonesConsulting/AnsibleVault.git ansible/vault
           # ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles
