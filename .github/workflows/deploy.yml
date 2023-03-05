@@ -71,8 +71,8 @@ jobs:
       - name: Connect to Nexus hosts and setup pre-requirements
         run: |
           eval $(ssh-agent); ssh-add <(echo -n '${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).private] }}' | base64 -d);
-          git clone -b main --single-branch git@github.com:JamesJonesConsulting/AnsibleInventory.git ansible/inventory
-          git clone -b main --single-branch git@github.com:JamesJonesConsulting/AnsibleVault.git ansible/vault
+          git clone -b ${{ env.ANSIBLE_INVENTORY_REPO_BRANCH }} --single-branch ${{ env.ANSIBLE_INVENTORY_REPO }} ansible/inventory
+          git clone -b ${{ env.ANSIBLE_VAULT_REPO_BRANCH }} --single-branch ${{ env.ANSIBLE_VAULT_REPO }} ansible/vault
           # ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles -f
           ansible-galaxy collection install -r ansible/requirements.yml -f
           echo "${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).vault] }}" > ${RUNNER_TEMP}/.keyvault
