@@ -36,12 +36,13 @@ env:
   NEXUS_DOCKER_USER: ${{ secrets.HOME_NEXUS_DOCKER_USER }}
   CONFIG_MAP: |
     home:
-      vault: HOME_ANSIBLE_VAULT_KEY
-      private: HOME_SSH_PRIVATE_KEY
-      group: nexus
-      tls_name: nexus.jamesjonesconsulting.com
-      user: jam
-      network: sgan
+      nexus:
+        vault: HOME_ANSIBLE_VAULT_KEY
+        private: HOME_SSH_PRIVATE_KEY
+        group: nexus
+        tls_name: nexus.jamesjonesconsulting.com
+        user: jam
+        network: sgan
 
 jobs:
   prepare:
@@ -65,7 +66,7 @@ jobs:
       - name: Get Ansible Config
         id: set-ansible-config
         run: |
-          echo "ansible_config=$(echo -n '${{ env.CONFIG_MAP}}' | yq -r -o=json - | jq '.${{ inputs.environment }}' -c)" >> $GITHUB_OUTPUT
+          echo "ansible_config=$(echo -n '${{ env.CONFIG_MAP}}' | yq -r -o=json - | jq '.${{ inputs.environment }}.${{ inputs.deploy-group }}' -c)" >> $GITHUB_OUTPUT
       # - name: Add the key
       #   uses: JamesJonesConsulting/github.ssh-add-b64.action@main
       #   with:
@@ -82,11 +83,9 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
           ANSIBLE_TIMEOUT: 120
-          # LETSENCRYPT_HOST_CERT_PATH: /etc/letsencrypt/live/{{ parameters.networks[parameters.network].letsencrypt_host }}
           TAG_VERSION: ${{ inputs.nexus-tag }}
           OPENLDAP_TAG_VERSION: ${{ inputs.openldap-tag }}
           HOST_NAME: ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).tls_name }}
-          # LETSENCRYPT_HOST: {{ parameters.networks[parameters.network].letsencrypt_host }}
           LDAP_ROOT: ${{ vars.LDAP_ROOT }}
           LDAP_USER: ${{ vars.LDAP_USER }}
           LDAP_PASSWORD: ${{ secrets.LDAP_PASSWORD }}
