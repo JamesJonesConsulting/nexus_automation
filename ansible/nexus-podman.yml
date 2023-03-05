@@ -63,11 +63,11 @@
     mode: '0644'
 - name: Add cron script
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/files/updatecert"
-    dest: /etc/cron.daily/updatecert
+    src: "{{ playbook_dir }}/files/renewcert"
+    dest: /etc/cron.daily/renewcert
     mode: 0755
-- name: Run the updatecert
-  ansible.builtin.command: /etc/cron.daily/updatecert
+- name: Run the renewcert
+  ansible.builtin.command: /etc/cron.daily/renewcert
   register: cmd
   changed_when:
     - "'Regenerating' in cmd.stdout"

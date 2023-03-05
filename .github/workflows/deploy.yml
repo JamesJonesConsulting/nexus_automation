@@ -43,12 +43,12 @@ jobs:
   prepare:
     name: Prepare the host for Nexus
     runs-on: [ self-hosted, medium, build ]
-    container:
-      image: nexus.jamesjonesconsulting.com:5443/jamesjonesconsulting/podman-dind-like:latest
-      options: --userns=keep-id --group-add keep-groups --privileged --user root --security-opt seccomp=unconfined
-      credentials:
-        username: ${{ secrets.HOME_NEXUS_DOCKER_USER }}
-        password: ${{ secrets.HOME_NEXUS_DOCKER_PASSWORD }}
+    # container:
+    #   image: nexus.jamesjonesconsulting.com:5443/jamesjonesconsulting/podman-dind-like:latest
+    #   options: --userns=keep-id --group-add keep-groups --privileged --user root --security-opt seccomp=unconfined
+    #   credentials:
+    #     username: ${{ secrets.HOME_NEXUS_DOCKER_USER }}
+    #     password: ${{ secrets.HOME_NEXUS_DOCKER_PASSWORD }}
     outputs:
       ansible_config: ${{ steps.set-ansible-config.outputs.ansible_config }}
     steps:
@@ -73,8 +73,17 @@ jobs:
           # ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles -f
           ansible-galaxy collection install -r ansible/requirements.yml -f
           echo "${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).vault] }}" > ${RUNNER_TEMP}/.keyvault
-          # ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/roles/inventory/${{ inputs.deploy-inventory }}/hosts -u ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).user }} ansible/playbook-pre.yml -e 'inventory_group_name=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }} inventory=${{ inputs.deploy-inventory }} certpath=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }}' -vvv
+          ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/roles/inventory/${{ inputs.deploy-inventory }}/hosts -u ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).user }} ansible/playbook.yml -e 'inventory_group_name=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }} inventory=${{ inputs.deploy-inventory }} certpath=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }}' -vvv
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
           ANSIBLE_TIMEOUT: 120
-
+          # LETSENCRYPT_HOST_CERT_PATH: /etc/letsencrypt/live/{{ parameters.networks[parameters.network].letsencrypt_host }}
+          # TAG_VERSION: {{ parameters.version.nexus3 }}
+          # OPENLDAP_TAG_VERSION: {{ parameters.version.openldap }}
+          # HOST_NAME: {{ parameters.networks[parameters.network]['hostname'] }}
+          # LETSENCRYPT_HOST: {{ parameters.networks[parameters.network].letsencrypt_host }}
+          # LDAP_ROOT: {{ parameters.networks[parameters.ldap]['root'] }}
+          # LDAP_USER: {{ parameters.networks[parameters.ldap]['user'] }}
+          # LDAP_PASSWORD: {{ parameters.networks[parameters.ldap]['password'] }}
+          # LDAP_ADMIN_USER: {{ parameters.networks[parameters.ldap]['admin']['user'] }}
+          # LDAP_ADMIN_PASSWORD: {{ parameters.networks[parameters.ldap]['admin']['password'] }}
