@@ -2,24 +2,19 @@ name: Deploy Nexus
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        required: true
+        type: environment
+        description: Select the deployment environment
       deploy-tag:
         required: true
         type: string
         description: Enter the Nexus tag for deployment
         default: latest
-      environment:
-        type: environment
-        description: Select the environment
-      deploy-inventory:
-        required: true
-        type: choice
-        description: Enter the Nexus tag for deployment
-        options: 
-          - home
       deploy-group:
         required: true
         type: choice
-        description: Enter the Nexus tag for deployment
+        description: Enter the Nexus group name for deployment
         options: 
           - nexus
       # build_id:
