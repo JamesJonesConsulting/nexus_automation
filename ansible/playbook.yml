@@ -5,19 +5,19 @@
   become: true
   vars_files:
     - ./vars/main.yml
-  tasks: []
-    # - name: Setup firewall
-    #   include_tasks: firewall.yml
-    # - name: Install certbot
-    #   ansible.builtin.yum:
-    #     name: certbot
-    #     state: present
-    # - name: Install openssl and OpenJDK 11
-    #   ansible.builtin.yum:
-    #     name:
-    #       - openssl
-    #       - java-11-openjdk-headless
-    #     state: present
+  tasks:
+    - name: Setup firewall
+      ansible.builtin.include_tasks: firewall.yml
+    - name: Install certbot
+      ansible.builtin.yum:
+        name: certbot
+        state: present
+    - name: Install openssl and OpenJDK 11
+      ansible.builtin.yum:
+        name:
+          - openssl
+          - java-11-openjdk-headless
+        state: present
     # - name: Create a temp directory for Docker files
     #   ansible.builtin.tempfile:
     #     state: directory
