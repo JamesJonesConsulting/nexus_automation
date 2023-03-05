@@ -55,7 +55,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
-          ref: ${{ workflow_run.head_branch }}
+          ref: ${{ github.event.workflow_run.head_branch }}
       - name: Get Ansible Config
         id: set-ansible-config
         run: |
