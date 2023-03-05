@@ -89,23 +89,3 @@ jobs:
           LDAP_PASSWORD: ${{ secrets.LDAP_PASSWORD }}
           LDAP_ADMIN_USER: ${{ vars.LDAP_ADMIN_USER }}
           LDAP_ADMIN_PASSWORD: ${{ secrets.LDAP_ADMIN_PASSWORD }}
-      # - name: Connect to Nexus hosts and setup pre-requirements
-      #   run: |
-      #     eval $(ssh-agent); ssh-add <(echo -n '${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).private] }}' | base64 -d);
-      #     git clone -b ${{ vars.ANSIBLE_INVENTORY_REPO_BRANCH }} --single-branch ${{ vars.ANSIBLE_INVENTORY_REPO }} ansible/inventory
-      #     git clone -b ${{ vars.ANSIBLE_VAULT_REPO_BRANCH }} --single-branch ${{ vars.ANSIBLE_VAULT_REPO }} ansible/vault
-      #     # ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles -f
-      #     ansible-galaxy collection install -r ansible/requirements.yml -f
-      #     echo "${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).vault] }}" > ${RUNNER_TEMP}/.keyvault
-      #     ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/inventory/${{ inputs.environment }}/hosts -u ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).user }} ansible/playbook.yml -e 'inventory_group_name=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }} inventory=${{ inputs.environment }} certpath=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }}' -vvv
-      #   env:
-      #     ANSIBLE_HOST_KEY_CHECKING: False
-      #     ANSIBLE_TIMEOUT: 120
-      #     TAG_VERSION: ${{ inputs.nexus-tag }}
-      #     OPENLDAP_TAG_VERSION: ${{ inputs.openldap-tag }}
-      #     HOST_NAME: ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).tls_name }}
-      #     LDAP_ROOT: ${{ vars.LDAP_ROOT }}
-      #     LDAP_USER: ${{ vars.LDAP_USER }}
-      #     LDAP_PASSWORD: ${{ secrets.LDAP_PASSWORD }}
-      #     LDAP_ADMIN_USER: ${{ vars.LDAP_ADMIN_USER }}
-      #     LDAP_ADMIN_PASSWORD: ${{ secrets.LDAP_ADMIN_PASSWORD }}
