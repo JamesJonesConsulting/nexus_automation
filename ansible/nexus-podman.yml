@@ -15,6 +15,7 @@
       format: oci
       extra_args: >-
         -f {{ container.dockerfile }}
+        --pull
         --target final
         --build-arg TAG_VERSION={{ container.tag }}
       annotation:
