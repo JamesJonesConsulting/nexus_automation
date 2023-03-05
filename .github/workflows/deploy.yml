@@ -45,8 +45,8 @@ env:
         network: sgan
 
 jobs:
-  prepare:
-    name: Prepare the host for Nexus
+  setup:
+    name: Deploy Nexus to target host
     runs-on: [ self-hosted, medium, build ]
     environment: ${{ inputs.environment }}
     # container:
