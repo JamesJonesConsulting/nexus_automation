@@ -67,8 +67,8 @@ jobs:
         id: set-ansible-config
         run: |
           echo "ansible_config=$(echo -n '${{ env.CONFIG_MAP}}' | yq -r -o=json - | jq '.${{ inputs.environment }}.${{ inputs.deploy-group }}' -c)" >> $GITHUB_OUTPUT
-      - name: Add the key
-        uses: JamesJonesConsulting/github.ssh-add-b64.action@main
+      - name: Run the bash shell inside a ssh agent for Ansible
+        uses: JamesJonesConsulting/github.bash-in-ssh-agent.action@main
         with:
           encoded-key: ${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).private] }}
           run: |
