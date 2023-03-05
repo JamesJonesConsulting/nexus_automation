@@ -77,7 +77,7 @@ jobs:
             # ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles -f
             ansible-galaxy collection install -r ansible/requirements.yml -f
             echo "${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).vault] }}" > ${RUNNER_TEMP}/.keyvault
-            ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/inventory/${{ inputs.environment }}/hosts -u ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).user }} ansible/playbook.yml -e 'inventory_group_name=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }} inventory=${{ inputs.environment }} certpath=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }}' -vvv
+            ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/inventory/${{ inputs.environment }}/hosts -u ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).user }} ansible/playbook.yml -e 'inventory_group_name=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }} inventory=${{ inputs.environment }} certpath=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }}'
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
           ANSIBLE_TIMEOUT: 120
