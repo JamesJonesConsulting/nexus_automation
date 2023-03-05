@@ -88,7 +88,7 @@ jobs:
           HOST_NAME: ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).tls_name }}
           # LETSENCRYPT_HOST: {{ parameters.networks[parameters.network].letsencrypt_host }}
           LDAP_ROOT: ${{ vars.LDAP_ROOT }}
-          LDAP_USER: ${{ vars.LDAP_ADMIN_USER }}
-          # LDAP_PASSWORD: {{ parameters.networks[parameters.ldap]['password'] }}
-          # LDAP_ADMIN_USER: {{ parameters.networks[parameters.ldap]['admin']['user'] }}
-          # LDAP_ADMIN_PASSWORD: {{ parameters.networks[parameters.ldap]['admin']['password'] }}
+          LDAP_USER: ${{ vars.LDAP_USER }}
+          LDAP_PASSWORD: ${{ secrets.LDAP_PASSWORD }}
+          LDAP_ADMIN_USER: ${{ vars.LDAP_ADMIN_USER }}
+          LDAP_ADMIN_PASSWORD: ${{ secrets.LDAP_ADMIN_PASSWORD }}
