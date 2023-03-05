@@ -53,12 +53,12 @@
     loop_var: ssl_setting
 - name: Setup the VM options
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/templates/nexus.vmoptions.j2"
+    src: "templates/nexus.vmoptions.j2"
     dest: /opt/nexus/nexus.vmoptions
     mode: '0644'
 - name: Create the sysconfig file
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/templates/sysconfig/nexus.j2"
+    src: "templates/sysconfig/nexus.j2"
     dest: /etc/sysconfig/nexus
     mode: '0644'
 - name: Add cron script
