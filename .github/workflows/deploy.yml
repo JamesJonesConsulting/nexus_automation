@@ -76,8 +76,8 @@ jobs:
             git clone -b ${{ vars.ANSIBLE_VAULT_REPO_BRANCH }} --single-branch ${{ vars.ANSIBLE_VAULT_REPO }} ansible/vault
             # ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles -f
             ansible-galaxy collection install -r ansible/requirements.yml -f
-            # echo "${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).vault] }}" > ${RUNNER_TEMP}/.keyvault
-            # ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/inventory/${{ inputs.environment }}/hosts -u ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).user }} ansible/playbook.yml -e 'inventory_group_name=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }} inventory=${{ inputs.environment }} certpath=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }}' -vvv
+            echo "${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).vault] }}" > ${RUNNER_TEMP}/.keyvault
+            ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/inventory/${{ inputs.environment }}/hosts -u ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).user }} ansible/playbook.yml -e 'inventory_group_name=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }} inventory=${{ inputs.environment }} certpath=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }}' -vvv
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
           ANSIBLE_TIMEOUT: 120
