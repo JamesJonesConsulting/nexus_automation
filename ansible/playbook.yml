@@ -34,23 +34,23 @@
         - enablenexusplugins.py
       loop_control:
         loop_var: dkrfile
-    # - name: Setup the OpenLDAP container tasks
-    #   ansible.builtin.include_tasks: openldap-podman.yml
-    #   vars:
-    #     container:
-    #       path: "{{ dck_path.path }}"
-    #       dockerfile: Dockerfile.openldap
-    #       tag: "{{ lookup('env', 'OPENLDAP_TAG_VERSION') }}"
-    #       hostname: "{{ lookup('env', 'HOST_NAME') }}"
-    #     ldap:
-    #       admin:
-    #         username: "{{ lookup('env', 'LDAP_ADMIN_USER') }}"
-    #         password: "{{ lookup('env', 'LDAP_ADMIN_PASSWORD') }}"
-    #       users: "{{ lookup('env', 'LDAP_USER') }}"
-    #       passwords: "{{ lookup('env', 'LDAP_PASSWORD') }}"
-    #       root: "{{ lookup('env', 'LDAP_ROOT') }}"
-    #       tls:
-    #         enabled: true
+    - name: Setup the OpenLDAP container tasks
+      ansible.builtin.include_tasks: openldap-podman.yml
+      vars:
+        container:
+          path: "{{ dck_path.path }}"
+          dockerfile: Dockerfile.openldap
+          tag: "{{ lookup('env', 'OPENLDAP_TAG_VERSION') }}"
+          hostname: "{{ lookup('env', 'HOST_NAME') }}"
+        ldap:
+          admin:
+            username: "{{ lookup('env', 'LDAP_ADMIN_USER') }}"
+            password: "{{ lookup('env', 'LDAP_ADMIN_PASSWORD') }}"
+          users: "{{ lookup('env', 'LDAP_USER') }}"
+          passwords: "{{ lookup('env', 'LDAP_PASSWORD') }}"
+          root: "{{ lookup('env', 'LDAP_ROOT') }}"
+          tls:
+            enabled: true
     # - name: Setup the Nexus container tasks
     #   ansible.builtin.include_tasks: nexus-podman.yml
     #   vars:
