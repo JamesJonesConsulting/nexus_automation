@@ -7,6 +7,9 @@ on:
         type: string
         description: Enter the Nexus tag for deployment
         default: latest
+      environment:
+        type: environment
+        description: Select the environment
       deploy-inventory:
         required: true
         type: choice
