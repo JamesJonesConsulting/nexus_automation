@@ -18,22 +18,22 @@
           - openssl
           - java-11-openjdk-headless
         state: present
-    # - name: Create a temp directory for Docker files
-    #   ansible.builtin.tempfile:
-    #     state: directory
-    #     suffix: docker
-    #   register: dck_path
-    # - name: Copy over the Dockerfile's
-    #   ansible.builtin.copy:
-    #     src: "{{ playbook_dir }}/files/{{ dkrfile }}"
-    #     dest: "{{ dck_path.path }}/{{ dkrfile }}"
-    #     mode: 0755
-    #   loop:
-    #     - Dockerfile.nexus3
-    #     - Dockerfile.openldap
-    #     - enablenexusplugins.py
-    #   loop_control:
-    #     loop_var: dkrfile
+    - name: Create a temp directory for Docker files
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: docker
+      register: dck_path
+    - name: Copy over the Dockerfile's
+      ansible.builtin.copy:
+        src: "files/{{ dkrfile }}"
+        dest: "{{ dck_path.path }}/{{ dkrfile }}"
+        mode: 0755
+      loop:
+        - Dockerfile.nexus3
+        - Dockerfile.openldap
+        - enablenexusplugins.py
+      loop_control:
+        loop_var: dkrfile
     # - name: Setup the OpenLDAP container tasks
     #   ansible.builtin.include_tasks: openldap-podman.yml
     #   vars:
@@ -59,8 +59,8 @@
     #       dockerfile: Dockerfile.nexus3
     #       tag: "{{ lookup('env', 'TAG_VERSION') }}"
     #       hostname: "{{ lookup('env', 'HOST_NAME') }}"
-    # - name: Remove the temporary directory
-    #   ansible.builtin.file:
-    #     path: "{{ dck_path.path }}"
-    #     state: absent
-    #   when: "dck_path.path is defined"
+    - name: Remove the temporary directory
+      ansible.builtin.file:
+        path: "{{ dck_path.path }}"
+        state: absent
+      when: "dck_path.path is defined"
