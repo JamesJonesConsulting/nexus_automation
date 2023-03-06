@@ -1,0 +1,41 @@
+#!/bin/bash
+
+. /etc/sysconfig/nexus
+
+echo "$KEYSTORE_PATH"
+
+function renewkeystore {
+    KEYSTORE_BASEPATH=$(dirname "$KEYSTORE_PATH")
+    systemctl stop container-nexus || true
+    systemctl stop container-openldap || true
+    openssl pkcs12 -export -out "${KEYSTORE_BASEPATH}/keystore.pkcs12" -in "${CERT_ROOT_PATH}${CERT_DOMAIN}.all.pem" -passout pass:password -name nexus
+    rm -f "${KEYSTORE_PATH}"
+    keytool -v -importkeystore -srckeystore "${KEYSTORE_BASEPATH}/keystore.pkcs12" -destkeystore "${KEYSTORE_PATH}" -deststoretype JKS -deststorepass password -srcstorepass password
+    rm -f "${KEYSTORE_BASEPATH}/keystore.pkcs12"; 
+    mkdir -p $OPENLDAP_CERTS
+    cat ${CERT_ROOT_PATH}${CERT_DOMAIN}.crt > $OPENLDAP_CERTS/openldap.crt
+    cat ${CERT_ROOT_PATH}${CERT_DOMAIN}.ca > $OPENLDAP_CERTS/openldapCA.crt
+    cat ${CERT_ROOT_PATH}${CERT_DOMAIN}.key > $OPENLDAP_CERTS/openldap.key
+    chown -R 1001:1001 $OPENLDAP_CERTS 
+    systemctl restart container-openldap 2>&1 || true
+    systemctl restart container-nexus 2>&1 || true
+}
+
+if test -f "$KEYSTORE_PATH"; then
+    echo "$KEYSTORE_PATH exists."
+    KEYSTORE_UNTIL=$(echo 'password' | keytool -list -v -keystore $KEYSTORE_PATH 2>/dev/null | grep -i 'until' | sed 's/.*until: //' | head -n1)
+    KEYSTORE_END=$(date -d "$KEYSTORE_UNTIL" '+%Y-%m-%d')
+    echo $KEYSTORE_END
+    PEM_UNTIL=$(openssl x509 -enddate -noout -in "${CERT_ROOT_PATH}${CERT_DOMAIN}.all.pem" | sed 's/.*notAfter=//')
+    PEM_END=$(date -d "$PEM_UNTIL" '+%Y-%m-%d')
+    echo $PEM_END
+    if [ "$KEYSTORE_END" = "$PEM_END" ]; then
+        echo "No update required."
+    else
+        echo "Certificate has been updated. Regenerating..."
+        renewkeystore
+    fi
+else
+    echo "$KEYSTORE_PATH doesn't exist."
+    renewkeystore
+fi

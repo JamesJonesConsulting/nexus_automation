@@ -65,11 +65,11 @@
     dest: /etc/sysconfig/nexus
 - name: Add cron script
   copy: 
-    src: "{{ playbook_dir }}/files/updatecert"
-    dest: /etc/cron.daily/updatecert
+    src: "{{ playbook_dir }}/files/renewcert"
+    dest: /etc/cron.daily/renewcert
     mode: 0755
-- name: Run the updatecert
-  command: /etc/cron.daily/updatecert
+- name: Run the renewcert
+  command: /etc/cron.daily/renewcert
 - name: Set the permissions on the JKS
   file:
     path: /opt/nexus/etc/ssl/keystore.jks

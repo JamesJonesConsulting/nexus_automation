@@ -7,7 +7,7 @@
     - ./vars/main.yml
   tasks:
     - name: Setup firewall
-      ansible.builtin.include_tasks: firewall.yml
+      include_tasks: firewall.yml
     - name: Install certbot
       ansible.builtin.yum:
         name: certbot
@@ -25,7 +25,7 @@
       register: dck_path
     - name: Copy over the Dockerfile's
       ansible.builtin.copy:
-        src: "files/{{ dkrfile }}"
+        src: "{{ playbook_dir }}/files/{{ dkrfile }}"
         dest: "{{ dck_path.path }}/{{ dkrfile }}"
         mode: 0755
       loop:

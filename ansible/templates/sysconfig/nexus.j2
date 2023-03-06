@@ -1,3 +1,4 @@
 OPENLDAP_CERTS=/opt/openldap/certs
 KEYSTORE_PATH=/opt/nexus/etc/ssl/keystore.jks
-CERTBOT_DOMAIN={{ hostvars[groups[inventory_group_name] | first].nexus.path }}
+CERT_ROOT_PATH={{ hostvars[groups[inventory_group_name] | first].nexus.tls.root }}
+CERT_DOMAIN={{ hostvars[groups[inventory_group_name] | first].nexus.tls.domain }}

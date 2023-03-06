@@ -2,11 +2,26 @@ name: Deploy Nexus
 on:
   workflow_dispatch:
     inputs:
-      deploy_tag:
+      environment:
+        required: true
+        type: environment
+        description: Select the deployment environment
+      nexus-tag:
         required: true
         type: string
-        description: Enter the Nexus tag for deployment
+        description: Enter the Nexus docker tag for deployment
         default: latest
+      openldap-tag:
+        required: true
+        type: string
+        description: Enter the Openldap docker tag for deployment
+        default: latest
+      deploy-group:
+        required: true
+        type: choice
+        description: Enter the Nexus group name for deployment
+        options: 
+          - nexus
       # build_id:
       #   required: true
       #   type: number
@@ -19,19 +34,60 @@ on:
 
 env:
   NEXUS_DOCKER_USER: ${{ secrets.HOME_NEXUS_DOCKER_USER }}
+  CONFIG_MAP: |
+    home:
+      nexus:
+        vault: HOME_ANSIBLE_VAULT_KEY
+        private: HOME_SSH_PRIVATE_KEY
+        group: nexus
+        tls_name: nexus.jamesjonesconsulting.com
+        user: jam
+        network: sgan
 
 jobs:
-  prepare:
-    runs-on: [ self-hosted, big, build ]
-    container:
-      image: nexus.jamesjonesconsulting.com:5443/jamesjonesconsulting/podman-dind-like:latest
-      options: --userns=keep-id --group-add keep-groups --privileged --user root --security-opt seccomp=unconfined
-      credentials:
-        username: ${{ secrets.HOME_NEXUS_DOCKER_USER }}
-        password: ${{ secrets.HOME_NEXUS_DOCKER_PASSWORD }}
+  setup:
+    name: Deploy Nexus to target host
+    runs-on: [ self-hosted, medium, build ]
+    environment: ${{ inputs.environment }}
+    # container:
+    #   image: nexus.jamesjonesconsulting.com:5443/jamesjonesconsulting/podman-dind-like:latest
+    #   options: --userns=keep-id --group-add keep-groups --privileged --user root --security-opt seccomp=unconfined
+    #   credentials:
+    #     username: ${{ secrets.HOME_NEXUS_DOCKER_USER }}
+    #     password: ${{ secrets.HOME_NEXUS_DOCKER_PASSWORD }}
+    outputs:
+      ansible_config: ${{ steps.set-ansible-config.outputs.ansible_config }}
     steps:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
+      - name: Install YQ
+        uses: dcarbone/install-yq-action@v1.1.0
+      - name: Get Ansible Config
+        id: set-ansible-config
+        run: |
+          echo "ansible_config=$(echo -n '${{ env.CONFIG_MAP}}' | yq -r -o=json - | jq '.${{ inputs.environment }}.${{ inputs.deploy-group }}' -c)" >> $GITHUB_OUTPUT
+      - name: Run the bash shell inside a ssh agent for Ansible
+        uses: JamesJonesConsulting/github.bash-in-ssh-agent.action@main
+        with:
+          encoded-key: ${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).private] }}
+          run: |
+            git clone -b ${{ vars.ANSIBLE_INVENTORY_REPO_BRANCH }} --single-branch ${{ vars.ANSIBLE_INVENTORY_REPO }} ansible/inventory
+            git clone -b ${{ vars.ANSIBLE_VAULT_REPO_BRANCH }} --single-branch ${{ vars.ANSIBLE_VAULT_REPO }} ansible/vault
+            # ansible-galaxy role install -r ansible/requirements.yml -p ansible/roles -f
+            ansible-galaxy collection install -r ansible/requirements.yml -f
+            echo "${{ secrets[fromJson(steps.set-ansible-config.outputs.ansible_config).vault] }}" > ${RUNNER_TEMP}/.keyvault
+            ansible-playbook --vault-password-file=${RUNNER_TEMP}/.keyvault -i ansible/inventory/${{ inputs.environment }}/hosts -u ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).user }} ansible/playbook.yml -e 'inventory_group_name=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }} inventory=${{ inputs.environment }} certpath=${{ fromJson(steps.set-ansible-config.outputs.ansible_config).group }}'
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: False
+          ANSIBLE_TIMEOUT: 120
+          TAG_VERSION: ${{ inputs.nexus-tag }}
+          OPENLDAP_TAG_VERSION: ${{ inputs.openldap-tag }}
+          HOST_NAME: ${{ fromJson(steps.set-ansible-config.outputs.ansible_config).tls_name }}
+          LDAP_ROOT: ${{ vars.LDAP_ROOT }}
+          LDAP_USER: ${{ vars.LDAP_USER }}
+          LDAP_PASSWORD: ${{ secrets.LDAP_PASSWORD }}
+          LDAP_ADMIN_USER: ${{ vars.LDAP_ADMIN_USER }}
+          LDAP_ADMIN_PASSWORD: ${{ secrets.LDAP_ADMIN_PASSWORD }}
