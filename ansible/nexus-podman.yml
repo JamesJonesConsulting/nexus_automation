@@ -15,6 +15,8 @@
       format: oci
       extra_args: >-
         -f {{ container.dockerfile }}
+        --pull
+        --no-cache
         --target final
         --build-arg TAG_VERSION={{ container.tag }}
       annotation:
@@ -53,21 +55,21 @@
     loop_var: ssl_setting
 - name: Setup the VM options
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/templates/nexus.vmoptions.j2"
+    src: "templates/nexus.vmoptions.j2"
     dest: /opt/nexus/nexus.vmoptions
     mode: '0644'
 - name: Create the sysconfig file
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/templates/sysconfig/nexus.j2"
+    src: "templates/sysconfig/nexus.j2"
     dest: /etc/sysconfig/nexus
     mode: '0644'
 - name: Add cron script
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/files/updatecert"
-    dest: /etc/cron.daily/updatecert
+    src: "{{ playbook_dir }}/files/renewcert"
+    dest: /etc/cron.daily/renewcert
     mode: 0755
-- name: Run the updatecert
-  ansible.builtin.command: /etc/cron.daily/updatecert
+- name: Run the renewcert
+  ansible.builtin.command: /etc/cron.daily/renewcert
   register: cmd
   changed_when:
     - "'Regenerating' in cmd.stdout"
