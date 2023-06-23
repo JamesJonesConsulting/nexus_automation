@@ -1,11 +1,11 @@
 ARG TAG_VERSION
-FROM docker.io/sonatype/nexus3:${TAG_VERSION} AS base
+# FROM docker.io/sonatype/nexus3:${TAG_VERSION} AS base
 
-USER root
+# USER root
 
-RUN microdnf install -y libxml2 libxslt jq git python3
+# RUN microdnf install -y libxml2 libxslt jq git python3
 
-USER nexus
+# USER nexus
 
 FROM docker.io/maven:3.8.6-openjdk-8 AS cpan-plugins
 
@@ -33,7 +33,15 @@ RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-communi
   && cp -r ~/.m2/repository/org/sonatype/nexus/plugins/nexus-repository-composer/. plugins \
   && cd plugins; find . -name "*.pom" -o -name '*.xml' -o -name '*sources.jar' -o -name '_remote.repositories' -type f | xargs rm
 
-FROM base AS final
+# FROM base AS final
+FROM docker.io/sonatype/nexus3:${TAG_VERSION} AS base
+
+USER root
+
+RUN microdnf install -y libxml2 libxslt jq git python3
+
+USER nexus
+
 
 COPY --from=cpan-plugins --chown=root:root /work/plugins/. /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-cpan/
 COPY --from=composer-plugins --chown=root:root /work/plugins/. /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-composer/
