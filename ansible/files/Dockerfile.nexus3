@@ -1,48 +1,32 @@
-ARG TAG_VERSION
+ARG TAG_VERSION=latest
+FROM docker.io/maven:3.8.6-openjdk-8 AS maven3-jdk8
+
+WORKDIR /work
+
+RUN apt-get update && apt-get install -y jq
+
+FROM maven3-jdk8 AS cpan-plugins
+
+RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-community/nexus-repository-cpan/tags" | jq '.[] | .name' -r | grep cpan-parent- | head -n 1) \
+  && git clone --branch "$TAG_VER" https://github.com/sonatype-nexus-community/nexus-repository-cpan.git . \
+  && mvn clean install -DskipTests
+
+FROM maven3-jdk8 AS composer-plugins
+
+RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-community/nexus-repository-composer/tags" | jq '.[] | .name' -r | grep composer-parent- | head -n 1) \
+  && git clone --branch "$TAG_VER" https://github.com/sonatype-nexus-community/nexus-repository-composer.git . \
+  && mvn clean package -PbuildKar;
+
 FROM docker.io/sonatype/nexus3:${TAG_VERSION} AS base
 
 USER root
 
 RUN microdnf install -y libxml2 libxslt jq git python3
 
-USER nexus
+COPY --from=composer-plugins /work/nexus-repository-composer/target/nexus-repository-composer-*-bundle.kar ${NEXUS_HOME}/deploy/
+COPY --from=cpan-plugins /work/nexus-repository-cpan/target/nexus-repository-cpan-*.jar ${NEXUS_HOME}/deploy/
 
-FROM docker.io/maven:3.8.6-openjdk-8 AS cpan-plugins
-
-WORKDIR /work
-
-RUN apt-get update && apt-get install -y jq
-
-RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-community/nexus-repository-cpan/tags" | jq '.[] | .name' -r | grep cpan-parent- | head -n 1) \
-  && git clone --branch "$TAG_VER" https://github.com/sonatype-nexus-community/nexus-repository-cpan.git . \
-  && mvn clean install -DskipTests \
-  && mkdir plugins \
-  && cp -r ~/.m2/repository/org/sonatype/nexus/plugins/nexus-repository-cpan/. plugins \
-  && cd plugins; find . -name "*.pom" -o -name '*.xml' -o -name '*sources.jar' -o -name '_remote.repositories' -type f | xargs rm
-
-FROM docker.io/maven:3.8.6-openjdk-8 AS composer-plugins
-
-WORKDIR /work
-
-RUN apt-get update && apt-get install -y jq
-
-RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-community/nexus-repository-composer/tags" | jq '.[] | .name' -r | grep composer-parent- | head -n 1) \
-  && git clone --branch "$TAG_VER" https://github.com/sonatype-nexus-community/nexus-repository-composer.git . \
-  && mvn clean install -DskipTests \
-  && mkdir plugins \
-  && cp -r ~/.m2/repository/org/sonatype/nexus/plugins/nexus-repository-composer/. plugins \
-  && cd plugins; find . -name "*.pom" -o -name '*.xml' -o -name '*sources.jar' -o -name '_remote.repositories' -type f | xargs rm
-
-FROM base AS final
-
-COPY --from=cpan-plugins --chown=root:root /work/plugins/. /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-cpan/
-COPY --from=composer-plugins --chown=root:root /work/plugins/. /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-composer/
-COPY enablenexusplugins.py /tmp
-
-USER root
-
-RUN NEXUS_CORE_FEATURES_XML=$(find . -name 'nexus-core-feature-*-features.xml' -type f) \
-  && exec python3 /tmp/enablenexusplugins.py $NEXUS_CORE_FEATURES_XML /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-cpan/ /opt/sonatype/nexus/system/org/sonatype/nexus/plugins/nexus-repository-composer/ \
-  && xmllint --format "$NEXUS_CORE_FEATURES_XML" > "$NEXUS_CORE_FEATURES_XML"
+# Removing any extraneous stuff
+RUN rm -f ${NEXUS_HOME}/deploy/*sources.jar
 
 USER nexus
