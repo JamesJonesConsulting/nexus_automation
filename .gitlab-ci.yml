@@ -14,7 +14,7 @@
     VAULT_REPO: https://github.com/JamesJonesConsulting/AnsibleVault.git
     VAULT_BRANCH: main
   prereq_script: &prereq_deps
-    - dnf install -y git ansible* podman-docker
+    - dnf install -y git ansible-core podman-docker
   before_script: &clone_ansible_resources_before_script
     - cp "$PRIVATE_CLONE_NETRC" ~/.netrc; chmod 0600 ~/.netrc
     - git clone -b $INVENTORY_BRANCH --single-branch $INVENTORY_REPO inventory
