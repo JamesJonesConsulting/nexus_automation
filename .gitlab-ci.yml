@@ -23,6 +23,7 @@
     - echo -n "$HOME_ANSIBLE_VAULT_KEY" > .vault
     - ansible-galaxy collection install -r requirements.yml
 
+image: quay.io/podman/stable:latest
 stages:
   - provision
 workflow:
