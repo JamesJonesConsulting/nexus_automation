@@ -22,7 +22,7 @@
   script: &clone_ansible_resources_script
     - eval $(ssh-agent); ssh-add <(echo "$HOME_SSH_PRIVATE_KEY" | base64 -d);
     - echo -n "$HOME_ANSIBLE_VAULT_KEY" > .vault
-    - ansible-galaxy collection install -r requirements.yml
+    - ansible-galaxy collection install -r ansible/requirements.yml
 
 image: quay.io/podman/stable:latest
 stages:
