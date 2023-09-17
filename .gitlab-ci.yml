@@ -13,6 +13,8 @@
     INVENTORY_BRANCH: main
     VAULT_REPO: https://github.com/JamesJonesConsulting/AnsibleVault.git
     VAULT_BRANCH: main
+  prereq_script: &prereq_deps
+    - dnf install -y git ansible* podman-docker
   before_script: &clone_ansible_resources_before_script
     - cp "$PRIVATE_CLONE_NETRC" ~/.netrc; chmod 0600 ~/.netrc
     - git clone -b $INVENTORY_BRANCH --single-branch $INVENTORY_REPO inventory
@@ -67,6 +69,7 @@ maintain_vip:
         LDAP_ADMIN_USER: $HOME_LDAP_ADMIN_USER
         LDAP_ADMIN_PASSWORD: $HOME_LDAP_ADMIN_PASSWORD
   before_script:
+    - *prereq_deps
     - *clone_ansible_resources_before_script
   script:
     - *clone_ansible_resources_script
