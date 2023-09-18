@@ -45,7 +45,7 @@ variables:
     value: latest
     description: OpenLDAP Tag Version
 
-maintain_vip:
+'Setup Nexus3':
   stage: provision
   extends: .base
   tags:
