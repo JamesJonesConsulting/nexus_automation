@@ -17,6 +17,12 @@ RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-communi
   && git clone --branch "$TAG_VER" https://github.com/sonatype-nexus-community/nexus-repository-composer.git . \
   && mvn clean package -PbuildKar;
 
+FROM maven3-jdk8 AS ansible-galaxy-plugins
+
+RUN TAG_VER=$(curl --silent "https://api.github.com/repos/l3ender/nexus-repository-ansiblegalaxy/tags" | jq '.[] | .name' -r | head -n 1) \
+  && git clone --branch "$TAG_VER" https://github.com/l3ender/nexus-repository-ansiblegalaxy.git . \
+  && mvn clean package -PbuildKar;
+
 FROM docker.io/sonatype/nexus3:${TAG_VERSION} AS final
 
 USER root
@@ -25,6 +31,7 @@ RUN microdnf install -y libxml2 libxslt jq git python3
 
 COPY --from=composer-plugins /work/nexus-repository-composer/target/nexus-repository-composer-*-bundle.kar ${NEXUS_HOME}/deploy/
 COPY --from=cpan-plugins /work/nexus-repository-cpan/target/nexus-repository-cpan-*.jar ${NEXUS_HOME}/deploy/
+COPY --from=ansible-galaxy-plugins /work/nexus-repository-ansiblegalaxy/target/nexus-repository-ansiblegalaxy-*-bundle.kar ${DEPLOY_DIR}
 
 # Removing any extraneous stuff
 RUN rm -f ${NEXUS_HOME}/deploy/*sources.jar
