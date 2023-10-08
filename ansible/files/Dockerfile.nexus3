@@ -31,7 +31,7 @@ RUN microdnf install -y libxml2 libxslt jq git python3
 
 COPY --from=composer-plugin /work/nexus-repository-composer/target/nexus-repository-composer-*-bundle.kar ${NEXUS_HOME}/deploy/
 COPY --from=cpan-plugin /work/nexus-repository-cpan/target/nexus-repository-cpan-*.jar ${NEXUS_HOME}/deploy/
-COPY --from=galaxy-plugin /work/nexus-repository-ansiblegalaxy/target/nexus-repository-ansiblegalaxy-*-bundle.kar ${DEPLOY_DIR}
+COPY --from=galaxy-plugin /work/nexus-repository-ansiblegalaxy/target/nexus-repository-ansiblegalaxy-*-bundle.kar ${NEXUS_HOME}/deploy/
 
 # Removing any extraneous stuff
 RUN rm -f ${NEXUS_HOME}/deploy/*sources.jar
