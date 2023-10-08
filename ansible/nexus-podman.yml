@@ -14,11 +14,9 @@
       force_rm: true
       format: oci
       extra_args: >-
-        -f {{ container.dockerfile }}
-        --pull
-        --no-cache
         --target final
         --build-arg TAG_VERSION={{ container.tag }}
+        -f {{ container.dockerfile }}
       annotation:
         app: nexus
         function: artifactory for various artifacts
