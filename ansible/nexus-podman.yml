@@ -13,9 +13,9 @@
       cache: false
       force_rm: true
       format: oci
+      file: "{{ container.dockerfile }}"
       extra_args: >-
         --build-arg TAG_VERSION={{ container.tag }}
-        -f {{ container.dockerfile }}
       annotation:
         app: nexus
         function: artifactory for various artifacts

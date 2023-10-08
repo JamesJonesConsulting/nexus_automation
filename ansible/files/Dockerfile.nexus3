@@ -5,19 +5,19 @@ WORKDIR /work
 
 RUN apt-get update && apt-get install -y jq
 
-FROM maven3-jdk8 AS cpan-plugins
+FROM maven3-jdk8 AS cpan-plugin
 
 RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-community/nexus-repository-cpan/tags" | jq '.[] | .name' -r | grep cpan-parent- | head -n 1) \
   && git clone --branch "$TAG_VER" https://github.com/sonatype-nexus-community/nexus-repository-cpan.git . \
   && mvn clean install -DskipTests
 
-FROM maven3-jdk8 AS composer-plugins
+FROM maven3-jdk8 AS composer-plugin
 
 RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-community/nexus-repository-composer/tags" | jq '.[] | .name' -r | grep composer-parent- | head -n 1) \
   && git clone --branch "$TAG_VER" https://github.com/sonatype-nexus-community/nexus-repository-composer.git . \
   && mvn clean package -PbuildKar;
 
-FROM maven3-jdk8 AS ansible-galaxy-plugins
+FROM maven3-jdk8 AS galaxy-plugin
 
 RUN TAG_VER=$(curl --silent "https://api.github.com/repos/l3ender/nexus-repository-ansiblegalaxy/tags" | jq '.[] | .name' -r | head -n 1) \
   && git clone --branch "$TAG_VER" https://github.com/l3ender/nexus-repository-ansiblegalaxy.git . \
@@ -29,9 +29,9 @@ USER root
 
 RUN microdnf install -y libxml2 libxslt jq git python3
 
-COPY --from=composer-plugins /work/nexus-repository-composer/target/nexus-repository-composer-*-bundle.kar ${NEXUS_HOME}/deploy/
-COPY --from=cpan-plugins /work/nexus-repository-cpan/target/nexus-repository-cpan-*.jar ${NEXUS_HOME}/deploy/
-COPY --from=ansible-galaxy-plugins /work/nexus-repository-ansiblegalaxy/target/nexus-repository-ansiblegalaxy-*-bundle.kar ${DEPLOY_DIR}
+COPY --from=composer-plugin /work/nexus-repository-composer/target/nexus-repository-composer-*-bundle.kar ${NEXUS_HOME}/deploy/
+COPY --from=cpan-plugin /work/nexus-repository-cpan/target/nexus-repository-cpan-*.jar ${NEXUS_HOME}/deploy/
+COPY --from=galaxy-plugin /work/nexus-repository-ansiblegalaxy/target/nexus-repository-ansiblegalaxy-*-bundle.kar ${DEPLOY_DIR}
 
 # Removing any extraneous stuff
 RUN rm -f ${NEXUS_HOME}/deploy/*sources.jar
