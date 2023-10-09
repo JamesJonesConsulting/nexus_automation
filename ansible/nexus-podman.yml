@@ -15,6 +15,7 @@
       format: oci
       file: "{{ container.dockerfile }}"
       extra_args: >-
+        --pull --no-cache
         --build-arg TAG_VERSION={{ container.tag }}
       annotation:
         app: nexus
