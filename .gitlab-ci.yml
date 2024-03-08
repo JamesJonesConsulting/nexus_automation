@@ -42,7 +42,7 @@ variables:
     value: '3.66.0'
     description: Nexus Tag Version
   OPENLDAP_TAG_VERSION:
-    value: latest
+    value: '2.5.17'
     description: OpenLDAP Tag Version
 
 'Setup Nexus3':
