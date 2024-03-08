@@ -79,6 +79,6 @@ variables:
         --vault-password-file .vault
         ansible/playbook.yml 
         -e "inventory_group_name=$MACHINE_GROUP"
-        -e "inventory=$INVENTORY_ENV" -vvv
+        -e "inventory=$INVENTORY_ENV"
 
     # - echo "$HOME_COMPOSER_ADMIN" > admin.json; cat admin.json
