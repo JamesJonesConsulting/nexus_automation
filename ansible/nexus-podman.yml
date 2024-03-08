@@ -65,7 +65,7 @@
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/files/renewcert"
     dest: /etc/cron.daily/renewcert
-    mode: 0755
+    mode: "0755"
 - name: Run the renewcert
   ansible.builtin.command: /etc/cron.daily/renewcert
   register: cmd
@@ -107,8 +107,8 @@
       - "5447"
     env:
       INSTALL4J_ADD_VM_PARAMS: >-
-        -Xms4096m -Xmx4096m
-        -XX:MaxDirectMemorySize=4096m
+        -Xms16384m -Xmx16384m
+        -XX:MaxDirectMemorySize=16384m
         -Djava.util.prefs.userRoot=/nexus-data/javaprefs
         -Djavax.net.ssl.keyStore=/nexus-data/etc/ssl/keystore.jks
         -Djavax.net.ssl.keyStorePassword=password

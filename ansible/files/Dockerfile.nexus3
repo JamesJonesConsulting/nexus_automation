@@ -1,39 +1,63 @@
-ARG TAG_VERSION=latest
-FROM docker.io/maven:3.8.6-openjdk-8 AS maven3-jdk8
+FROM docker.io/maven:3.8.6-openjdk-8 AS cpan-plugin
 
 WORKDIR /work
 
-RUN apt-get update && apt-get install -y jq
+RUN apt-get update && apt-get install -y jq git
 
-FROM maven3-jdk8 AS cpan-plugin
-
-RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-community/nexus-repository-cpan/tags" | jq '.[] | .name' -r | grep cpan-parent- | head -n 1) \
+RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-community/nexus-repository-cpan/tags" | jq '[.[] | .name][0]' -r) \
   && git clone --branch "$TAG_VER" https://github.com/sonatype-nexus-community/nexus-repository-cpan.git . \
   && mvn clean install -DskipTests
 
-FROM maven3-jdk8 AS composer-plugin
-
-RUN TAG_VER=$(curl --silent "https://api.github.com/repos/sonatype-nexus-community/nexus-repository-composer/tags" | jq '.[] | .name' -r | grep composer-parent- | head -n 1) \
-  && git clone --branch "$TAG_VER" https://github.com/sonatype-nexus-community/nexus-repository-composer.git . \
-  && mvn clean package -PbuildKar;
-
-FROM maven3-jdk8 AS galaxy-plugin
-
-RUN TAG_VER=$(curl --silent "https://api.github.com/repos/l3ender/nexus-repository-ansiblegalaxy/tags" | jq '.[] | .name' -r | head -n 1) \
-  && git clone --branch "$TAG_VER" https://github.com/l3ender/nexus-repository-ansiblegalaxy.git . \
-  && mvn clean package -PbuildKar;
-
-FROM docker.io/sonatype/nexus3:${TAG_VERSION} AS final
+FROM nexus.jamesjonesconsulting.com:5444/sonatype/nexus3
 
 USER root
 
-RUN microdnf install -y libxml2 libxslt jq git python3
+RUN microdnf install -y xmlstarlet jq wget
 
-COPY --from=composer-plugin /work/nexus-repository-composer/target/nexus-repository-composer-*-bundle.kar ${NEXUS_HOME}/deploy/
-COPY --from=cpan-plugin /work/nexus-repository-cpan/target/nexus-repository-cpan-*.jar ${NEXUS_HOME}/deploy/
-COPY --from=galaxy-plugin /work/nexus-repository-ansiblegalaxy/target/nexus-repository-ansiblegalaxy-*-bundle.kar ${NEXUS_HOME}/deploy/
+COPY --from=cpan-plugin /work/nexus-repository-cpan/target/nexus-repository-cpan-*.jar /tmp/
 
-# Removing any extraneous stuff
-RUN rm -f ${NEXUS_HOME}/deploy/*sources.jar
+RUN _FEATURES_XML=$(find $NEXUS_HOME -name "nexus-core-feature*features.xml") \
+  && _KARAF_NS=$(grep -Po '(?<=<features xmlns=")[^"]+' $_FEATURES_XML) \
+  && PLUGIN_ANSIBLEGALAXY_VERSION=$(curl -s https://api.github.com/repos/l3ender/nexus-repository-ansiblegalaxy/releases | jq '[.[] | select(.prerelease | not) | .tag_name][0]' -r) \
+  && wget "https://github.com/l3ender/nexus-repository-ansiblegalaxy/releases/download/$PLUGIN_ANSIBLEGALAXY_VERSION/nexus-repository-ansiblegalaxy-$PLUGIN_ANSIBLEGALAXY_VERSION-bundle.kar" \
+    -P "$NEXUS_HOME/system/org/sonatype/nexus/plugins/nexus-repository-ansiblegalaxy/$PLUGIN_ANSIBLEGALAXY_VERSION" \
+  && xmlstarlet ed -L -N karaf="$_KARAF_NS" \
+    -s '/karaf:features' -t elem -n feature -v "" \
+    -s '/karaf:features/feature[position() = last()]' -t attr -n name -v nexus-repository-ansiblegalaxy \
+    -s '/karaf:features/feature[@name="nexus-repository-ansiblegalaxy"]' -t attr -n description -v "org.sonatype.nexus.plugins:nexus-repository-ansiblegalaxy" \
+    -s '/karaf:features/feature[@name="nexus-repository-ansiblegalaxy"]' -t attr -n version -v "$PLUGIN_ANSIBLEGALAXY_VERSION" \
+    -s '/karaf:features/feature[@name="nexus-repository-ansiblegalaxy"]' -t elem -n "details" -v "org.sonatype.nexus.plugins:nexus-repository-ansiblegalaxy" \
+    -s '/karaf:features/feature[@name="nexus-repository-ansiblegalaxy"]' -t elem -n "bundle" -v "mvn:org.sonatype.nexus.plugins/nexus-repository-ansiblegalaxy/$PLUGIN_ANSIBLEGALAXY_VERSION"  \
+    -s '/karaf:features/karaf:feature[@name="nexus-core-feature"] ' -t elem -n feature -v "nexus-repository-ansiblegalaxy"  \
+    -s '/karaf:features/karaf:feature[@name="nexus-core-feature"]/feature[text()="nexus-repository-ansiblegalaxy"]' -t attr -n dependency -v false \
+    -s '/karaf:features/karaf:feature[@name="nexus-core-feature"]/feature[text()="nexus-repository-ansiblegalaxy"]' -t attr -n prerequisite -v false $_FEATURES_XML \
+  && PLUGIN_CPAN_VERSION=$(curl -s https://api.github.com/repos/sonatype-nexus-community/nexus-repository-cpan/tags | jq '[.[].name][0] | sub("cpan-parent-";"")' -r) \
+  && mkdir -p "$NEXUS_HOME/system/org/sonatype/nexus/plugins/nexus-repository-cpan/$PLUGIN_CPAN_VERSION" \
+  && mv "/tmp/nexus-repository-cpan-$PLUGIN_CPAN_VERSION.jar" "$NEXUS_HOME/system/org/sonatype/nexus/plugins/nexus-repository-cpan/$PLUGIN_CPAN_VERSION" \
+  && rm /tmp/nexus-repository-cpan-*.jar \
+  && ls -all "$NEXUS_HOME/system/org/sonatype/nexus/plugins/nexus-repository-cpan/$PLUGIN_CPAN_VERSION" \
+  && xmlstarlet ed -L -N karaf="$_KARAF_NS" \
+    -s '/karaf:features' -t elem -n feature -v "" \
+    -s '/karaf:features/feature[position() = last()]' -t attr -n name -v nexus-repository-cpan \
+    -s '/karaf:features/feature[@name="nexus-repository-cpan"]' -t attr -n description -v "org.sonatype.nexus.plugins:nexus-repository-cpan" \
+    -s '/karaf:features/feature[@name="nexus-repository-cpan"]' -t attr -n version -v "$PLUGIN_CPAN_VERSION" \
+    -s '/karaf:features/feature[@name="nexus-repository-cpan"]' -t elem -n "details" -v "org.sonatype.nexus.plugins:nexus-repository-cpan" \
+    -s '/karaf:features/feature[@name="nexus-repository-cpan"]' -t elem -n "bundle" -v "mvn:org.sonatype.nexus.plugins/nexus-repository-cpan/$PLUGIN_CPAN_VERSION"  \
+    -s '/karaf:features/karaf:feature[@name="nexus-core-feature"] ' -t elem -n feature -v "nexus-repository-cpan"  \
+    -s '/karaf:features/karaf:feature[@name="nexus-core-feature"]/feature[text()="nexus-repository-cpan"]' -t attr -n dependency -v false \
+    -s '/karaf:features/karaf:feature[@name="nexus-core-feature"]/feature[text()="nexus-repository-cpan"]' -t attr -n prerequisite -v false $_FEATURES_XML \
+  && PLUGIN_COMPOSER_VERSION=$(curl -s https://api.github.com/repos/sonatype-nexus-community/nexus-repository-composer/tags | jq '[.[].name][0] | sub("composer-parent-";"")' -r) \
+  && wget "https://repo1.maven.org/maven2/org/sonatype/nexus/plugins/nexus-repository-composer/$PLUGIN_COMPOSER_VERSION/nexus-repository-composer-$PLUGIN_COMPOSER_VERSION-bundle.kar" \
+    -P "$NEXUS_HOME/system/org/sonatype/nexus/plugins/nexus-repository-composer/$PLUGIN_COMPOSER_VERSION" \
+  && xmlstarlet ed -L -N karaf="$_KARAF_NS" \
+    -s '/karaf:features' -t elem -n feature -v "" \
+    -s '/karaf:features/feature[position() = last()]' -t attr -n name -v nexus-repository-composer \
+    -s '/karaf:features/feature[@name="nexus-repository-composer"]' -t attr -n description -v "org.sonatype.nexus.plugins:nexus-repository-composer" \
+    -s '/karaf:features/feature[@name="nexus-repository-composer"]' -t attr -n version -v "$PLUGIN_COMPOSER_VERSION" \
+    -s '/karaf:features/feature[@name="nexus-repository-composer"]' -t elem -n "details" -v "org.sonatype.nexus.plugins:nexus-repository-composer" \
+    -s '/karaf:features/feature[@name="nexus-repository-composer"]' -t elem -n "bundle" -v "mvn:org.sonatype.nexus.plugins/nexus-repository-composer/$PLUGIN_COMPOSER_VERSION"  \
+    -s '/karaf:features/karaf:feature[@name="nexus-core-feature"] ' -t elem -n feature -v "nexus-repository-composer"  \
+    -s '/karaf:features/karaf:feature[@name="nexus-core-feature"]/feature[text()="nexus-repository-composer"]' -t attr -n dependency -v false \
+    -s '/karaf:features/karaf:feature[@name="nexus-core-feature"]/feature[text()="nexus-repository-composer"]' -t attr -n prerequisite -v false $_FEATURES_XML
 
 USER nexus
