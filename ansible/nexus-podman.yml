@@ -4,24 +4,6 @@
     state: stopped
   register: sysd
   ignore_errors: true
-- name: Get the tags for Nexus composer plugin
-  ansible.builtin.uri:
-    url: https://api.github.com/repos/sonatype-nexus-community/nexus-repository-composer/tags
-    return_content: true
-    validate_certs: false
-  register: _composer_tags
-- name: Get the tags for Nexus Ansible Galaxy plugin
-  ansible.builtin.uri:
-    url: https://api.github.com/repos/l3ender/nexus-repository-ansiblegalaxy/tags
-    return_content: true
-    validate_certs: false
-  register: _ansiblegalaxy_tags
-- name: Get the tags for Nexus cpan plugin
-  ansible.builtin.uri:
-    url: https://api.github.com/repos/sonatype-nexus-community/nexus-repository-cpan/tags
-    return_content: true
-    validate_certs: false
-  register: _cpan_tags
 - name: Build Nexus3 OCI Image
   containers.podman.podman_image:
     name: nexus
@@ -35,7 +17,6 @@
       extra_args: >-
         --pull --no-cache
         --build-arg TAG_VERSION={{ container.tag }}
-        --build-arg PLUGIN_CPAN_VERSION={{ _cpan_tags.json | map(attribute='name') | flatten | list | first | split('cpan-parent-') | last }}
       annotation:
         app: nexus
         function: artifactory for various artifacts
@@ -107,6 +88,24 @@
     - directory
   loop_control:
     loop_var: nxdeploy_state
+- name: Get the tags for Nexus composer plugin
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/sonatype-nexus-community/nexus-repository-composer/tags
+    return_content: true
+    validate_certs: false
+  register: _composer_tags
+- name: Get the tags for Nexus Ansible Galaxy plugin
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/l3ender/nexus-repository-ansiblegalaxy/tags
+    return_content: true
+    validate_certs: false
+  register: _ansiblegalaxy_tags
+- name: Get the tags for Nexus cpan plugin
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/sonatype-nexus-community/nexus-repository-cpan/tags
+    return_content: true
+    validate_certs: false
+  register: _cpan_tags
 - name: Get the plugins
   ansible.builtin.get_url:
     url: "{{ plugin_url }}"

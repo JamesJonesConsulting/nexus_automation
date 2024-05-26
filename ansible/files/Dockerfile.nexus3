@@ -5,19 +5,4 @@ USER root
 
 RUN microdnf install -y xmlstarlet jq wget
 
-ARG PLUGIN_CPAN_VERSION
-
-# RUN _FEATURES_XML=$(find $NEXUS_HOME -name "nexus-core-feature*features.xml") \
-#   && _KARAF_NS=$(grep -Po '(?<=<features xmlns=")[^"]+' $_FEATURES_XML) \
-#   && xmlstarlet ed -L -N karaf="$_KARAF_NS" \
-#     -s '/karaf:features' -t elem -n feature -v "" \
-#     -s '/karaf:features/feature[position() = last()]' -t attr -n name -v nexus-repository-cpan \
-#     -s '/karaf:features/feature[@name="nexus-repository-cpan"]' -t attr -n description -v "org.sonatype.nexus.plugins:nexus-repository-cpan" \
-#     -s '/karaf:features/feature[@name="nexus-repository-cpan"]' -t attr -n version -v "$PLUGIN_CPAN_VERSION" \
-#     -s '/karaf:features/feature[@name="nexus-repository-cpan"]' -t elem -n "details" -v "org.sonatype.nexus.plugins:nexus-repository-cpan" \
-#     -s '/karaf:features/feature[@name="nexus-repository-cpan"]' -t elem -n "bundle" -v "mvn:org.sonatype.nexus.plugins/nexus-repository-cpan-it/$PLUGIN_CPAN_VERSION"  \
-#     -s '/karaf:features/karaf:feature[@name="nexus-core-feature"] ' -t elem -n feature -v "nexus-repository-cpan"  \
-#     -s '/karaf:features/karaf:feature[@name="nexus-core-feature"]/feature[text()="nexus-repository-cpan"]' -t attr -n dependency -v false \
-#     -s '/karaf:features/karaf:feature[@name="nexus-core-feature"]/feature[text()="nexus-repository-cpan"]' -t attr -n prerequisite -v false $_FEATURES_XML
-
 USER nexus
