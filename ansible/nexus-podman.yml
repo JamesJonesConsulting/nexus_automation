@@ -25,8 +25,8 @@
   ansible.builtin.file:
     path: "{{ nxspath }}"
     state: directory
-    owner: 0200
-    group: 0200
+    owner: 200
+    group: 200
     mode: '0755'
   loop:
     - /opt/nexus
@@ -35,7 +35,7 @@
   loop_control:
     loop_var: nxspath
 - name: Adding SSL Application Port
-  ansible.builtin.ini_file:
+  community.general.ini_file:
     path: "/opt/nexus/etc/nexus.properties"
     section:
     no_extra_spaces: true
@@ -76,6 +76,55 @@
     path: /opt/nexus/etc/ssl/keystore.jks
     owner: 200
     group: 200
+- name: Adding deploy folder for plugins
+  ansible.builtin.file:
+    path: /opt/nexus-deploy
+    state: "{{ nxdeploy_state }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - absent
+    - directory
+  loop_control:
+    loop_var: nxdeploy_state
+- name: Get the tags for Nexus composer plugin
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/sonatype-nexus-community/nexus-repository-composer/tags
+    return_content: true
+    validate_certs: false
+  register: _composer_tags
+- name: Get the tags for Nexus Ansible Galaxy plugin
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/l3ender/nexus-repository-ansiblegalaxy/tags
+    return_content: true
+    validate_certs: false
+  register: _ansiblegalaxy_tags
+- name: Get the tags for Nexus cpan plugin
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/sonatype-nexus-community/nexus-repository-cpan/tags
+    return_content: true
+    validate_certs: false
+  register: _cpan_tags
+- name: Get the plugins
+  ansible.builtin.get_url:
+    url: "{{ plugin_url }}"
+    dest: "/opt/nexus-deploy/{{ plugin_url | basename }}"
+    mode: "0644"
+    validate_certs: false
+  loop:
+    - "https://repo1.maven.org/maven2/org/sonatype/nexus/plugins/nexus-repository-composer/\
+        {{ composer_plugin_version }}/nexus-repository-composer-{{ composer_plugin_version }}-bundle.kar"
+    - "https://repo1.maven.org/maven2/org/sonatype/nexus/plugins/nexus-repository-cpan-it/\
+        {{ cpan_plugin_version }}/nexus-repository-cpan-it-{{ cpan_plugin_version }}.jar"
+    - "https://github.com/l3ender/nexus-repository-ansiblegalaxy/releases/download/\
+        {{ ansible_galaxy_plugin_version }}/nexus-repository-ansiblegalaxy-{{ ansible_galaxy_plugin_version }}-bundle.kar"
+  loop_control:
+    loop_var: plugin_url
+  vars:
+    composer_plugin_version: "{{ _composer_tags.json | map(attribute='name') | flatten | list | first | split('composer-parent-') | last }}"
+    cpan_plugin_version: "{{ _cpan_tags.json | map(attribute='name') | flatten | list | first | split('cpan-parent-') | last }}"
+    ansible_galaxy_plugin_version: "{{ _ansiblegalaxy_tags.json | map(attribute='name') | flatten | list | first }}"
 - name: Re-create nexus container with systemd service file generated
   containers.podman.podman_container:
     name: nexus
@@ -114,6 +163,7 @@
         -Djavax.net.ssl.keyStorePassword=password
     volumes:
       - /opt/nexus:/nexus-data:Z
+      - /opt/nexus-deploy:/opt/sonatype/nexus/deploy:Z
     generate_systemd:
       path: /etc/systemd/system/
       restart_policy: always

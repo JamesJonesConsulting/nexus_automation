@@ -20,8 +20,8 @@ roles:
 #   version: release/1.0.1
 #   scm: git
 #   name: podman
-collections: []
-# - name: community.general
+collections:
+- name: community.general
 # - name: ansible.posix
 # - name: community.docker
 # - name: containers.podman
