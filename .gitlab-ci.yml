@@ -14,7 +14,7 @@
     VAULT_REPO: https://github.com/JamesJonesConsulting/AnsibleVault.git
     VAULT_BRANCH: main
   prereq_script: &prereq_deps
-    - dnf install -y git ansible-core podman-docker
+    - dnf install -y git ansible-core podman-docker ansible-collection*
   before_script: &clone_ansible_resources_before_script
     - cp "$PRIVATE_CLONE_NETRC" ~/.netrc; chmod 0600 ~/.netrc
     - git clone -b $INVENTORY_BRANCH --single-branch $INVENTORY_REPO inventory
@@ -39,10 +39,10 @@ variables:
       - home
     description: Inventory environment name
   TAG_VERSION:
-    value: latest
+    value: '3.68.1-java11'
     description: Nexus Tag Version
   OPENLDAP_TAG_VERSION:
-    value: latest
+    value: '2.5.17'
     description: OpenLDAP Tag Version
 
 'Setup Nexus3':
@@ -79,6 +79,6 @@ variables:
         --vault-password-file .vault
         ansible/playbook.yml 
         -e "inventory_group_name=$MACHINE_GROUP"
-        -e "inventory=$INVENTORY_ENV" -vvv
+        -e "inventory=$INVENTORY_ENV"
 
     # - echo "$HOME_COMPOSER_ADMIN" > admin.json; cat admin.json

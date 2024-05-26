@@ -39,7 +39,7 @@
       vars:
         container:
           path: "{{ dck_path.path }}"
-          dockerfile: Dockerfile.openldap
+          dockerfile: "{{ dck_path.path }}/Dockerfile.openldap"
           tag: "{{ lookup('env', 'OPENLDAP_TAG_VERSION') }}"
           hostname: "{{ lookup('env', 'HOST_NAME') }}"
         ldap:
@@ -56,7 +56,7 @@
       vars:
         container:
           path: "{{ dck_path.path }}"
-          dockerfile: Dockerfile.nexus3
+          dockerfile: "{{ dck_path.path }}/Dockerfile.nexus3"
           tag: "{{ lookup('env', 'TAG_VERSION') }}"
           hostname: "{{ lookup('env', 'HOST_NAME') }}"
     - name: Remove the temporary directory
