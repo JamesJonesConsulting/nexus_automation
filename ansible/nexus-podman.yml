@@ -116,8 +116,8 @@
   loop:
     - "https://repo1.maven.org/maven2/org/sonatype/nexus/plugins/nexus-repository-composer/\
         {{ composer_plugin_version }}/nexus-repository-composer-{{ composer_plugin_version }}-bundle.kar"
-    - "https://repo1.maven.org/maven2/org/sonatype/nexus/plugins/nexus-repository-cpan-it/\
-        {{ cpan_plugin_version }}/nexus-repository-cpan-it-{{ cpan_plugin_version }}.jar"
+    - "https://repo1.maven.org/maven2/org/sonatype/nexus/plugins/nexus-repository-cpan/\
+        {{ cpan_plugin_version }}/nexus-repository-cpan-{{ cpan_plugin_version }}-bundle.kar"
     - "https://github.com/l3ender/nexus-repository-ansiblegalaxy/releases/download/\
         {{ ansible_galaxy_plugin_version }}/nexus-repository-ansiblegalaxy-{{ ansible_galaxy_plugin_version }}-bundle.kar"
   loop_control:
