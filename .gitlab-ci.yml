@@ -39,7 +39,7 @@ variables:
       - home
     description: Inventory environment name
   TAG_VERSION:
-    value: '3.66.0'
+    value: '3.68.1-java11'
     description: Nexus Tag Version
   OPENLDAP_TAG_VERSION:
     value: '2.5.17'
