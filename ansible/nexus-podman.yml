@@ -156,8 +156,8 @@
       - "5447"
     env:
       INSTALL4J_ADD_VM_PARAMS: >-
-        -Xms16384m -Xmx16384m
-        -XX:MaxDirectMemorySize=16384m
+        -Xms32768m -Xmx32768m
+        -XX:MaxDirectMemorySize=32768m
         -Djava.util.prefs.userRoot=/nexus-data/javaprefs
         -Djavax.net.ssl.keyStore=/nexus-data/etc/ssl/keystore.jks
         -Djavax.net.ssl.keyStorePassword=password
